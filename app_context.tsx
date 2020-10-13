@@ -1,0 +1,91 @@
+import { ethers } from 'ethers';
+import React from 'react';
+
+export enum AuthState {
+  'success',
+  'failure',
+  'undefined'
+};
+
+export type ApplicationState = {
+  auth: AuthState | undefined,
+  signer: ethers.Signer | undefined,
+  error: string | undefined,
+};
+
+type AppAction = 
+  {type: 'auth_success'} |
+  {type: 'auth_failure'} |
+  {type: 'set_signer', payload: ethers.Signer} |
+  {type:'error', error: string|undefined};
+
+type Dispatch = (action: AppAction) => void;
+
+type AppStateProviderProps = {
+    children: React.ReactNode,
+    state?: ApplicationState 
+}
+
+const ApplicationStateContext = React.createContext<ApplicationState|undefined>(undefined);
+const AppDispatchContext = React.createContext<Dispatch|undefined>(undefined);
+
+function AppStateReducer(state:ApplicationState, action:AppAction):ApplicationState {
+  switch(action.type) {
+
+    case 'set_signer': {
+      return { ...state, signer: action.payload }
+    }
+
+    case 'auth_success': {
+      return { ...state, auth: AuthState.success}
+    }
+
+    case 'auth_failure': {
+      return { ...state, auth: AuthState.failure}
+    }
+
+    case 'error': {
+      return { ...state, error: action.error }
+    }
+
+    default: {
+      throw new Error(`Invalid AppDispatch Action: '${action}'`)
+    }
+  }
+}
+
+const initialState:ApplicationState = {
+  auth: AuthState.undefined,
+  signer: undefined, 
+  error: undefined,
+};
+
+function AppProvider({children, state}:AppStateProviderProps) {
+  const [appState, dispatch] = React.useReducer(AppStateReducer, state || initialState);
+
+  return (
+    <ApplicationStateContext.Provider value={appState}>
+      <AppDispatchContext.Provider value={dispatch}>
+        {children}
+      </AppDispatchContext.Provider>
+    </ApplicationStateContext.Provider>
+  )
+}
+
+const useAppState = () => {
+  const context = React.useContext(ApplicationStateContext);
+  if(context === undefined) throw new Error("useAppState must be used within an ApplicationStateContext Provider");
+
+  return context;
+}
+
+const useAppDispatch = () => {
+  const dispatch = React.useContext(AppDispatchContext);
+  if(dispatch === undefined) throw new Error("useAppDispatch must be used within an AppDispatchContext Provider");
+
+  return dispatch;
+}
+
+const useAppContext = ():[ApplicationState, React.Dispatch<AppAction>] => ([useAppState(), useAppDispatch()]);
+
+export {useAppContext, useAppState, useAppDispatch, AppProvider};
