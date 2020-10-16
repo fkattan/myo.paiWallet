@@ -1,3 +1,4 @@
+import HDWalletProvider from '@truffle/hdwallet-provider';
 import { ethers } from 'ethers';
 import React from 'react';
 
@@ -9,6 +10,7 @@ export enum AuthState {
 
 export type ApplicationState = {
   auth: AuthState | undefined,
+  provider: ethers.providers.JsonRpcProvider | undefined,
   signer: ethers.Signer | undefined,
   error: string | undefined,
 };
@@ -16,6 +18,7 @@ export type ApplicationState = {
 type AppAction = 
   {type: 'auth_success'} |
   {type: 'auth_failure'} |
+  {type: 'set_provider', payload: ethers.providers.JsonRpcProvider} |
   {type: 'set_signer', payload: ethers.Signer} |
   {type:'error', error: string|undefined};
 
@@ -32,8 +35,12 @@ const AppDispatchContext = React.createContext<Dispatch|undefined>(undefined);
 function AppStateReducer(state:ApplicationState, action:AppAction):ApplicationState {
   switch(action.type) {
 
+    case 'set_provider': {
+      return { ...state, provider: action.payload }
+    }
+
     case 'set_signer': {
-      return { ...state, signer: action.payload }
+      return { ...state, signer: action.payload}
     }
 
     case 'auth_success': {
@@ -56,7 +63,7 @@ function AppStateReducer(state:ApplicationState, action:AppAction):ApplicationSt
 
 const initialState:ApplicationState = {
   auth: AuthState.undefined,
-  signer: undefined, 
+  provider: undefined, 
   error: undefined,
 };
 

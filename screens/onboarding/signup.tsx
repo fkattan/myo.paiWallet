@@ -8,8 +8,6 @@ import { ethers } from 'ethers';
 
 import * as SecureStore from 'expo-secure-store';
 
-import {MATIC_PROVIDER_URL} from '../../constants';
-
 const MNEMONIC_KEY = "MNEMONIC_KEY";
 
 export default function Register() {

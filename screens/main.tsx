@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from './home';
-import ScanScreen from './scanner';
+import ScanScreen from './scan_qr';
+import PayScreen from './pay';
+
 import SignIn from './onboarding/signin';
 import { AuthState, useAppContext } from '../app_context';
 
@@ -33,6 +35,10 @@ const Main = () => {
             <Stack.Screen
                 name="scan"
                 component={ScanScreen} />
+
+            <Stack.Screen
+                name="pay"
+                component={PayScreen} />
         </Stack.Navigator>
     );
 }

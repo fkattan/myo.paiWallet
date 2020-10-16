@@ -35,7 +35,7 @@ const SignIn = () => {
     }
 
     return (
-        <View>
+        <View style={{flex:1, alignItems: 'center', justifyContent: 'center'}}>
             <Button title="Press to Authenticate" onPress={handleSignIn} />
         </View>
     );
