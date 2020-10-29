@@ -8,8 +8,10 @@ import PayScreen from './pay';
 
 import SignIn from './onboarding/signin';
 import { AuthState, useAppContext } from '../app_context';
+import { Button } from 'react-native';
 
 const Stack = createStackNavigator();
+
 
 const Main = () => {
 
@@ -18,7 +20,7 @@ const Main = () => {
 
     if(auth !== AuthState.success) {
         return(
-            <Stack.Navigator initialRouteName="SignIn">
+            <Stack.Navigator initialRouteName="SignIn" headerMode="none">
                 <Stack.Screen
                     name="SignIn"
                     component={SignIn} />
@@ -30,15 +32,47 @@ const Main = () => {
         <Stack.Navigator initialRouteName="home">
             <Stack.Screen
                 name="home"
-                component={HomeScreen} />
+                component={HomeScreen}
+                options={{
+                    title: 'Peso Argentino Intangible',
+                    headerTitleAlign: 'center',
+                    headerStyle: {
+                        backgroundColor: '#2961EC',
+                        elevation: 0,
+                        shadowOpacity: 0,
+                        borderBottomWidth: 0,
+                    },
+                    headerTintColor: '#FFF',
+                    headerTitleStyle: {
+                        fontFamily: "Montserrat-Bold"
+                    }
+                }} 
+            />
 
             <Stack.Screen
                 name="scan"
-                component={ScanScreen} />
+                component={ScanScreen} 
+                options={({navigation}) => ({
+                    headerRight: () => (
+                        <Button
+                          onPress={() => {navigation.navigate('home')}}
+                          title="Cancel"
+                        />
+                    )
+                })} />
 
             <Stack.Screen
                 name="pay"
-                component={PayScreen} />
+                component={PayScreen} 
+                options={({navigation}) => ({
+                    headerRight: () => (
+                        <Button
+                          onPress={() => {navigation.navigate('home')}}
+                          title="Cancel"
+                        />
+                    )
+                })} />
+
         </Stack.Navigator>
     );
 }

@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from "react";
 
-import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Text, ActivityIndicator, StatusBar } from "react-native";
 import {AntDesign} from '@expo/vector-icons';
+
+import PaiButton from '../components/button';
 
 import * as SecureStore from 'expo-secure-store';
 
+import "@ethersproject/shims"
 import ethers from 'ethers';
+
 import PAI from '../reference/PAI.json';
 import {L2_PROVIDER_URL, MNEMONIC_KEY, L2_PAI_ADDRESS} from '../constants';
 import generateMnemonic from '../utils/generate_mnemonic';
 
 import { useAppContext } from "../app_context";
 import { formatCurrency } from "../utils/currency_helpers";
+import { shortenAddress } from "../utils/address_helpers";
 
 
 type HomeProps = {
@@ -22,7 +27,7 @@ const Home = ({navigation}:HomeProps) => {
     const [address, setAddress] = useState<string>();
     const [balance, setBalance] = useState<string>();
     const [decimals, setDecimals] = useState<ethers.BigNumber>(ethers.BigNumber.from(0));
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     const [initialized, setInitialized] = useState<boolean>(false);
 
     const [ state, dispatch ] = useAppContext();
@@ -37,6 +42,7 @@ const Home = ({navigation}:HomeProps) => {
 
             let mnemonic = await SecureStore.getItemAsync(MNEMONIC_KEY);
             if(mnemonic === null) {
+                console.log("Generating new Wallet");
                 mnemonic = await generateMnemonic();
                 await SecureStore.setItemAsync(MNEMONIC_KEY, mnemonic)
                 .catch((reason:any) => { throw reason });
@@ -56,6 +62,8 @@ const Home = ({navigation}:HomeProps) => {
     }, []);
 
     useEffect(() => {
+        if(decimals === undefined) return; 
+
         (async () => {
             if(signer !== undefined) {
                 console.log("Fetching Account Balance");
@@ -67,40 +75,58 @@ const Home = ({navigation}:HomeProps) => {
 
                 setAddress(address);
 
+                console.log("Fetching Account Balance");
                 await pai.balanceOf(address)
-                .then((balance:ethers.BigNumber) => setBalance(ethers.utils.formatUnits(balance, decimals)))
+                .then((balance:ethers.BigNumber) => {
+                    console.log("decimals", decimals);
+                    console.log("Balance", balance.toString(), ethers.utils.formatUnits(balance, decimals));
+                    setBalance(ethers.utils.formatUnits(balance, decimals))
+                })
                 .catch((error:any) => { throw error })
                 .finally(() => setLoading(false));
             }
         })();
-    }, [signer]);
+    }, [signer, decimals]);
+
+    useEffect(() => {
+        navigation.setOptions({headerStyle: {
+            backgroundColor: loading ? '#e63946' : '#2961EC', 
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0, 
+        }});
+    }, [loading])
 
 
     if(loading || !initialized) return (
-        <View style={{flex: 0.8, alignItems: 'center', justifyContent: 'center'}}>
-            <Text style={{fontSize: 24, fontWeight: 'bold', marginBottom: 24}}>LOADING</Text>
-            <ActivityIndicator size="large" color="#000" />
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#e63946'}}>
+            <StatusBar hidden={true} />
+            <Text style={{fontSize: 24, fontWeight: 'bold', marginBottom: 24, fontFamily: "FugazOne", color: '#f1faee'}}>LOADING</Text>
+            <ActivityIndicator size="large" color="#f1faee" />
         </View>
     );
 
     return (
       <View style={styles.container}>
-        <View style={[styles.hero, {flex: 1, marginTop: 40 }]}>
-            <View>
-                <Text style={[styles.label, {marginBottom: 20}]}>PAI Balance</Text>
+        <StatusBar barStyle="light-content"/>
+        <View style={[styles.hero, {flex: 1}]}>
+            <View style={{flex: 1, alignItems: 'center', justifyContent: 'flex-end'}}>
                 <Text style={[styles.balance]}>{formatCurrency(balance || "0", 2, {prefix: '$'})}</Text>
             </View>
-        </View>
-        <View style={{flex: 0.25, flexDirection: 'row', alignItems: 'flex-start', marginTop: 18, width: '100%'}}>
-            <View style={{flex: 1, marginRight: 9}}>
-                <AntDesign.Button name="upload" onPress={() => {navigation.navigate("scan")}} size={24}><Text style={styles.buttonText}>Send</Text></AntDesign.Button>
+
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', marginTop: 8, marginBottom: 18, paddingHorizontal: 30, width: '100%'}}>
+                <View style={{flex: 1, marginRight: 9}}>
+                    <PaiButton category="danger" title="Send" iconName="upload" onPress={() => navigation.navigate("scan")} /> 
+                </View>
+                <View style={{flex: 1, marginLeft: 9}}>
+                    <PaiButton category="success" title="Receive" iconName="download" onPress={() => {}} /> 
+                </View>
             </View>
-            <View style={{flex: 1, marginLeft: 9}}>
-                <AntDesign.Button name="download" onPress={()=>{}}size={24}><Text style={styles.buttonText}>Receive</Text></AntDesign.Button>
-            </View>
         </View>
-        <View style={{flex: 1, marginTop: 15}}>
-            <Text>{address || "no network"}</Text>
+
+        <View style={{flex: 1, width: "100%", paddingBottom: 40, alignItems: 'center', justifyContent: 'flex-end'}}>
+            <Text style={{fontFamily: 'FugazOne', fontSize: 16}}>Account</Text>
+            <Text style={{fontFamily: 'FugazOne', fontSize: 16}}>{shortenAddress(address || "").toLowerCase() || "no network"}</Text>
         </View>
       </View>
     );
@@ -109,27 +135,46 @@ const Home = ({navigation}:HomeProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 18,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: "#dee2e6"
+  },
+
+  brand: {
+      fontFamily: 'FugazOne',
+      fontSize: 18,
+      color:'#e63946' 
+  },
+
+  tagLine: {
+      fontFamily: "Montserrat-Bold",
+      marginTop: 5,
+      fontSize: 14,
+      color:'#f1faee' 
   },
 
   hero: {
-    backgroundColor: '#FFF', 
-    borderRadius: 10,
+    padding: 8,
+    backgroundColor: '#2961EC',
+    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderTopWidth: 0,
     width: '100%',
     alignItems: 'center', 
     justifyContent: 'center'
   },
 
   label: {
-      fontSize: 24,
+      fontSize: 34,
+      fontFamily: "Montserrat-Bold",
+      color: "#f1faee",
   },
 
 
   balance: {
-      fontSize: 36,
-      fontWeight: 'bold'
+      fontSize: 42,
+      fontWeight: 'bold',
+      color: "#f1faee",
 
   },
 

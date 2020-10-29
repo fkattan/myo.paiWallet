@@ -1,9 +1,7 @@
 import React, { useEffect } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
-import * as SecureStore from 'expo-secure-store';
 
-import { View, Button } from 'react-native';
-
+import { ImageBackground, StatusBar, View, Text, StyleSheet, Pressable, Image} from 'react-native';
 import {useAppContext} from '../../app_context';
 
 const SignIn = () => {
@@ -23,7 +21,6 @@ const SignIn = () => {
     }, []);
 
     const handleSignIn = () => {
-        console.log("TODO: handle Auth");
         LocalAuthentication.authenticateAsync({
             promptMessage: "Authenticate to Use PAI Wallet"
         })
@@ -34,11 +31,73 @@ const SignIn = () => {
         })
     }
 
+    const AuthButton = () => (
+        <Pressable onPress={handleSignIn} style={{marginTop: 18}}>
+            <View style={styles.buttonContainer}>
+                <Text style={styles.buttonText}>Authenticate</Text>
+            </View>
+        </Pressable>
+    );
+
+
     return (
-        <View style={{flex:1, alignItems: 'center', justifyContent: 'center'}}>
-            <Button title="Press to Authenticate" onPress={handleSignIn} />
+        <View style={styles.container}>
+            <StatusBar hidden={true} />
+            <View style={{flex:1, alignItems: 'center', justifyContent: 'center'}}>
+                <Image source={require("../../assets/authenticate.png")} style={{marginBottom: 40}} /> 
+                <Text style={styles.title}>Myo.Finance</Text>
+                <Text style={styles.subTitle}>Peso Argentino Intangible</Text>
+            </View>
+            <View style={{marginBottom: 50}}>
+                <AuthButton />
+            </View>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex:1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    buttonContainer: { 
+        backgroundColor: '#75bf72',
+        paddingVertical: 22,
+        paddingHorizontal: 64,
+        borderRadius: 6,
+    },
+    buttonText: {
+        fontFamily: 'Montserrat-Bold',
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        color: "#FFF"
+    },
+
+    authButton: {
+        color: '#FFF',
+        backgroundColor: 'white'
+
+    },
+
+    title: {
+        color: "#0D1F3C",
+        fontFamily: 'FugazOne',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: 36,
+        marginBottom: 5,
+    },
+
+    subTitle: {
+        color: '#78839C',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        fontSize: 19,
+        marginBottom: 18,
+    }
+})
 
 export default SignIn;
