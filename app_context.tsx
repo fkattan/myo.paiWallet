@@ -11,7 +11,7 @@ export enum AuthState {
 export type ApplicationState = {
   auth: AuthState | undefined,
   provider: ethers.providers.JsonRpcProvider | undefined,
-  signer: ethers.Signer | undefined,
+  wallet?: ethers.Wallet | undefined,
   error: string | undefined,
 };
 
@@ -19,7 +19,7 @@ type AppAction =
   {type: 'auth_success'} |
   {type: 'auth_failure'} |
   {type: 'set_provider', payload: ethers.providers.JsonRpcProvider} |
-  {type: 'set_signer', payload: ethers.Signer} |
+  {type: 'set_wallet', payload: ethers.Wallet} |
   {type:'error', error: string|undefined};
 
 type Dispatch = (action: AppAction) => void;
@@ -39,8 +39,8 @@ function AppStateReducer(state:ApplicationState, action:AppAction):ApplicationSt
       return { ...state, provider: action.payload }
     }
 
-    case 'set_signer': {
-      return { ...state, signer: action.payload}
+    case 'set_wallet': {
+      return { ...state, wallet: action.payload}
     }
 
     case 'auth_success': {

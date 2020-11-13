@@ -11,7 +11,7 @@ import "@ethersproject/shims"
 import ethers from 'ethers';
 
 import PAI from '../reference/PAI.json';
-import {L2_PROVIDER_URL, MNEMONIC_KEY, L2_PAI_ADDRESS} from '../constants';
+import {L1_PROVIDER_URL, MNEMONIC_KEY, L1_PAI_ADDRESS} from '../constants';
 import generateMnemonic from '../utils/generate_mnemonic';
 
 import { useAppContext } from "../app_context";
@@ -31,7 +31,7 @@ const Home = ({navigation}:HomeProps) => {
     const [initialized, setInitialized] = useState<boolean>(false);
 
     const [ state, dispatch ] = useAppContext();
-    const { signer } = state;
+    const { wallet } = state;
 
     useEffect(() => {
         SecureStore.isAvailableAsync()
@@ -48,15 +48,15 @@ const Home = ({navigation}:HomeProps) => {
                 .catch((reason:any) => { throw reason });
             }
 
-            const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-            const signer = ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
+            const provider = new ethers.providers.JsonRpcProvider(L1_PROVIDER_URL);
+            const wallet = ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
 
-            const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
+            const pai = new ethers.Contract(L1_PAI_ADDRESS, PAI.abi, provider);
             pai.decimals()
             .then((result:ethers.BigNumber) => setDecimals(result))
 
             // dispatch({type: 'set_provider', payload: provider});
-            dispatch({type: 'set_signer', payload: signer});
+            dispatch({type: 'set_wallet', payload: wallet});
             setInitialized(true);
         });
     }, []);
@@ -65,12 +65,12 @@ const Home = ({navigation}:HomeProps) => {
         if(decimals === undefined) return; 
 
         (async () => {
-            if(signer !== undefined) {
+            if(wallet !== undefined) {
                 console.log("Fetching Account Balance");
                 setLoading(true);
 
-                const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, signer);
-                const address = await signer.getAddress()
+                const pai = new ethers.Contract(L1_PAI_ADDRESS, PAI.abi, wallet);
+                const address = await wallet.getAddress()
                 console.log("address", address);
 
                 setAddress(address);
@@ -86,7 +86,7 @@ const Home = ({navigation}:HomeProps) => {
                 .finally(() => setLoading(false));
             }
         })();
-    }, [signer, decimals]);
+    }, [wallet, decimals]);
 
     useEffect(() => {
         navigation.setOptions({headerStyle: {

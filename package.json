@@ -14,7 +14,7 @@
     "@react-native-community/masked-view": "0.1.10",
     "@react-navigation/native": "^5.7.6",
     "@react-navigation/stack": "^5.9.3",
-    "ethers": "^5.0.17",
+    "ethers": "^5.0.18",
     "ethers-eip712": "^0.2.0",
     "expo": "~39.0.2",
     "expo-barcode-scanner": "~9.0.0",

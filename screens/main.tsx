@@ -4,7 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from './home';
 import ScanScreen from './scan_qr';
-import PayScreen from './pay';
+import PayScreen from './payflow/init_payment';
+import PendingPaymentScreen from './payflow/pending_payment';
 
 import SignIn from './onboarding/signin';
 import { AuthState, useAppContext } from '../app_context';
@@ -72,6 +73,13 @@ const Main = () => {
                         />
                     )
                 })} />
+
+            <Stack.Screen
+                name="pending_payment"
+                component={PendingPaymentScreen} 
+                options={{
+                    header: (props) => (undefined) 
+                }}/>
 
         </Stack.Navigator>
     );

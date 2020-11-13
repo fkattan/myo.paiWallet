@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 
-import { ImageBackground, StatusBar, View, Text, StyleSheet, Pressable, Image} from 'react-native';
+import { StatusBar, View, Text, StyleSheet, Pressable, Image} from 'react-native';
 import {useAppContext} from '../../app_context';
 
 const SignIn = () => {
