@@ -11,7 +11,7 @@ import "@ethersproject/shims"
 import ethers from 'ethers';
 
 import PAI from '../reference/PAI.json';
-import {L1_PROVIDER_URL, MNEMONIC_KEY, L1_PAI_ADDRESS} from '../constants';
+import {L2_PROVIDER_URL, MNEMONIC_KEY, L2_PAI_ADDRESS} from '../constants';
 import generateMnemonic from '../utils/generate_mnemonic';
 
 import { useAppContext } from "../app_context";
@@ -48,10 +48,10 @@ const Home = ({navigation}:HomeProps) => {
                 .catch((reason:any) => { throw reason });
             }
 
-            const provider = new ethers.providers.JsonRpcProvider(L1_PROVIDER_URL);
+            const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
             const wallet = ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
 
-            const pai = new ethers.Contract(L1_PAI_ADDRESS, PAI.abi, provider);
+            const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
             pai.decimals()
             .then((result:ethers.BigNumber) => setDecimals(result))
 
@@ -69,7 +69,7 @@ const Home = ({navigation}:HomeProps) => {
                 console.log("Fetching Account Balance");
                 setLoading(true);
 
-                const pai = new ethers.Contract(L1_PAI_ADDRESS, PAI.abi, wallet);
+                const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, wallet);
                 const address = await wallet.getAddress()
                 console.log("address", address);
 

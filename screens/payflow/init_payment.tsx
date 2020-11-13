@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 
 import "@ethersproject/shims"
 import { ethers } from 'ethers';
-// import { TypedData, TypedDataUtils, encodeTypedDataDigest } from 'ethers-eip712'
-import { L1_PAI_ADDRESS, L1_PROVIDER_URL } from '../../constants';
+
+import { L2_PAI_ADDRESS, L2_PROVIDER_URL } from '../../constants';
 import L2_PAI from '../../reference/L2_PAI.json';
 
 import { TextInput, View, StyleSheet, Text, Button, KeyboardAvoidingView, Platform, Keyboard, ActivityIndicator, Pressable } from 'react-native';
@@ -33,52 +33,25 @@ const Pay = ({route, navigation}:PayProps) => {
 
     const handleAmountChange = (value:string):void => {setAmount(value)};
 
-    // const getEIP712Message = (chainId:number, owner:string, spender:string, value:string, nonce:string, deadline:string):TypedData => (
-
-    //     {
-    //         types: {
-    //             EIP712Domain: [
-    //                 {name: "name", type: "string"},
-    //                 {name: "version", type: "string"},
-    //                 {name: "chainId", type: "uint256"},
-    //                 {name: "verifyingContract", type: "address"},
-    //             ],
-    //             Permit: [
-    //                 {name: "owner", type: "address"},
-    //                 {name: "spender", type: "address"},
-    //                 {name: "value", type: "uint256"},
-    //                 {name: "nonce", type: "uint256"},
-    //                 {name: "deadline", type: "uint256"},
-    //             ]
-    //         },
-    //         primaryType: 'Permit' as const,
-    //         domain: {
-    //             name: "Peso Argentino Intangible",
-    //             version: "1",
-    //             chainId: chainId,
-    //             verifyingContract: L1_PAI_ADDRESS 
-    //         }, 
-    //         message: {
-    //             owner,
-    //             spender,
-    //             value,
-    //             nonce,
-    //             deadline
-    //         }
-    //     }
-    // );
-
     const eip712Sign = async (chainId:number, signerAddress:string, recipient:string, wei:string, nonce:string, deadline:string) => {
         if(wallet === undefined) return undefined; 
 
-        const provider = new ethers.providers.JsonRpcProvider(L1_PROVIDER_URL);
-        wallet.connect(provider);
+        const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
+        const walletProvider = wallet.connect(provider);
 
         const domain = {
             name: "Peso Argentino Intangible",
             version: "1",
             chainId,
-            verifyingContract: L1_PAI_ADDRESS 
+            verifyingContract: L2_PAI_ADDRESS 
+        };
+
+        const values:Record<string, any> = {
+            owner: signerAddress, 
+            spender: recipient, 
+            value: wei,
+            nonce,
+            deadline
         };
         
         const types = {
@@ -91,23 +64,11 @@ const Pay = ({route, navigation}:PayProps) => {
             ]
         };
 
-        const values:Record<string, any> = {
-            owner: signerAddress, 
-            spender: recipient, 
-            value: wei,
-            nonce,
-            deadline
-        };
-
         console.log("Payload", _TypedDataEncoder.getPayload(domain, types, values));
 
-        const signature = await wallet._signTypedData(domain, types, values);
-        console.log("Signature", signature);
-
+        const signature = await walletProvider._signTypedData(domain, types, values);
         const rsvSignature = ethers.utils.splitSignature(signature);
         console.log("Signature RSV", rsvSignature);
-
-        console.log("Domain Hash", _TypedDataEncoder.hashDomain(domain));
 
         return rsvSignature;
     }
@@ -118,31 +79,21 @@ const Pay = ({route, navigation}:PayProps) => {
 
         setLoading(true);
 
-        const signerAddress = await wallet.getAddress();
-        console.log("Signer Address", signerAddress);
+        const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
+        const walletProvider = wallet.connect(provider);
 
-        const provider = new ethers.providers.JsonRpcProvider(L1_PROVIDER_URL);
-        wallet.connect(provider);
+        const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, wallet);
 
-        const chainId = await wallet.getChainId();
 
-        const {number, timestamp} = await provider.getBlock(await provider.getBlockNumber());
-        console.log("Block Timestamp", timestamp);
-        console.log("Bock Number", number);
+        await provider.getCode(L2_PAI_ADDRESS).then(code => console.log("Code:", code));
 
-        // const nonce = await provider.getTransactionCount(signerAddress, number);
-        const nonce = await wallet.getTransactionCount("pending");
-        console.log("Nonce", nonce);
-
-        const pai = new ethers.Contract(L1_PAI_ADDRESS, L2_PAI.abi, wallet);
-        const metaNonce:ethers.BigNumber = await pai.nonces(signerAddress);
-        console.log("Meta-Nonce", metaNonce.toString());
-
+        const signerAddress = await walletProvider.getAddress();
+        const chainId = await walletProvider.getChainId();
+        const {timestamp} = await provider.getBlock(await provider.getBlockNumber());
+        const nonce = await walletProvider.getTransactionCount();
+        const metaNonce = await pai.nonces(signerAddress);
         const deadline:string = ((timestamp + 1000) * 1000).toString();
-        console.log("Deadline: ", deadline);
-
         const weiAmount = toWei(amount)
-        console.log("WEI Amount", weiAmount);
 
         const rsvSignature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline);
 
@@ -150,34 +101,6 @@ const Pay = ({route, navigation}:PayProps) => {
             console.log("Something went wrong; rsvSignature undefined");
             return;
         }
-
-
-        // const chainId = await wallet.getChainId();
-        // console.log("ChainID", chainId);
-
-        // const typedMessage = getEIP712Message(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline);
-        // console.log("typedMessage", typedMessage);
-
-        // console.log("Encoded Type", TypedDataUtils.encodeType(typedMessage.types, "Permit"))
-        // console.log("Type Hash", ethers.utils.hexlify(TypedDataUtils.typeHash(typedMessage.types, "Permit")).toString());
-        // console.log("Message Hash", ethers.utils.hexlify(TypedDataUtils.hashStruct(typedMessage, "Permit", typedMessage.message)).toString());
-
-        // console.log("Encoded Domain Type", TypedDataUtils.encodeType(typedMessage.types, "EIP712Domain"));
-        // console.log("Encoded Domain Type Hash", ethers.utils.hexlify(TypedDataUtils.typeHash(typedMessage.types, "EIP712Domain")).toString());
-        // console.log("Domain Hash", ethers.utils.hexlify(TypedDataUtils.hashStruct(typedMessage, "EIP712Domain", typedMessage.domain)).toString());
-
-        // // EIP712 Typed Message + Signature
-        // const digest = encodeTypedDataDigest(typedMessage);
-        // console.log("Digest", ethers.utils.hexlify(digest).toString());
-
-        // const signature = await wallet.signMessage(digest);
-
-        // const rsvSignature = ethers.utils.splitSignature(signature);
-        // console.log("Signature RSV", rsvSignature);
-        
-        // console.log("Recovered Address", ethers.utils.verifyMessage(digest, signature));
-
-
 
         // TODO: Send to relayer.
         const tx = await pai.permit(signerAddress, recipient, weiAmount, deadline, rsvSignature.v, rsvSignature.r, rsvSignature.s, {nonce, gasLimit: 90000, gasPrice: 2000000000})
