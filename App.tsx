@@ -9,6 +9,13 @@ import {useFonts} from 'expo-font';
 import { AppProvider } from './app_context';
 import Main from './screens/main';
 
+import { LogBox, Platform } from 'react-native';
+
+// Ignore "setting a timer ..." warning on Android
+if(Platform.OS === 'android' ) {
+  LogBox.ignoreLogs(["Setting a timer"])
+}
+
 export default function App() {
 
   const [fontsLoaded] = useFonts({

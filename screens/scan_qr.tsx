@@ -3,12 +3,10 @@ import { Text, View, StyleSheet, Button, Vibration, Dimensions, Platform } from 
 import { BarCodeEvent, BarCodeScannedCallback, BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 import * as Svg from 'react-native-svg';
 
-
 type ScannerParams = {
   navigation:any,
   route: any
 }
-
 
 export default function ScanQR({route, navigation}:ScannerParams) {
 
@@ -49,7 +47,7 @@ export default function ScanQR({route, navigation}:ScannerParams) {
     if(data.startsWith("ethereum:")) {
       setScanned(true);
       Vibration.vibrate();
-      navigation.navigate("pay", {recipient: data.replace(/^ethereum:/i, "").trim()});
+      navigation.navigate("enter_recipient", {recipient: data.replace(/^ethereum:/i, "").trim()});
     } else {
       setScanned(false);
     }

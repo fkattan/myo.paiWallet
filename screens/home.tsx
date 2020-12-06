@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 
 import { StyleSheet, View, Text, ActivityIndicator, StatusBar } from "react-native";
-import {AntDesign} from '@expo/vector-icons';
-
-import PaiButton from '../components/button';
+import * as Colors from '../colors';
+import Button from '../components/button';
 
 import * as SecureStore from 'expo-secure-store';
 
 import "@ethersproject/shims"
-import ethers from 'ethers';
+import {ethers} from 'ethers';
 
 import PAI from '../reference/PAI.json';
 import {L2_PROVIDER_URL, MNEMONIC_KEY, L2_PAI_ADDRESS} from '../constants';
@@ -16,7 +15,7 @@ import generateMnemonic from '../utils/generate_mnemonic';
 
 import { useAppContext } from "../app_context";
 import { formatCurrency } from "../utils/currency_helpers";
-import { shortenAddress } from "../utils/address_helpers";
+import TransactionHistory from "../components/transaction_history";
 
 
 type HomeProps = {
@@ -24,67 +23,67 @@ type HomeProps = {
 };
 
 const Home = ({navigation}:HomeProps) => {
-    const [address, setAddress] = useState<string>();
-    const [balance, setBalance] = useState<string>();
-    const [decimals, setDecimals] = useState<ethers.BigNumber>(ethers.BigNumber.from(0));
     const [loading, setLoading] = useState<boolean>(true);
     const [initialized, setInitialized] = useState<boolean>(false);
 
     const [ state, dispatch ] = useAppContext();
-    const { wallet } = state;
+    const { wallet, balance, decimals } = state;
 
     useEffect(() => {
+
+        console.log("Querying SecureStore");
+
         SecureStore.isAvailableAsync()
         .then(isSecureStoreAvailable => {
             if(!isSecureStoreAvailable) throw "SecureStore not available on Device";
+            console.log("Secure Store Available !!");
         })
         .then(async () => {
 
+            console.log("Querying Mnemonic");
             let mnemonic = await SecureStore.getItemAsync(MNEMONIC_KEY);
             if(mnemonic === null) {
-                console.log("Generating new Wallet");
                 mnemonic = await generateMnemonic();
                 await SecureStore.setItemAsync(MNEMONIC_KEY, mnemonic)
                 .catch((reason:any) => { throw reason });
             }
+            console.log("Got Mnemonic", mnemonic);
 
             const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
             const wallet = ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
 
             const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
-            pai.decimals()
-            .then((result:ethers.BigNumber) => setDecimals(result))
 
-            // dispatch({type: 'set_provider', payload: provider});
+            pai.decimals()
+            .then((result:ethers.BigNumber) => {
+                dispatch({type: 'set_decimals', payload:result})
+            });
+
             dispatch({type: 'set_wallet', payload: wallet});
             setInitialized(true);
-        });
+        })
+        .catch(reason => {
+            console.error("Error: ", reason);
+        })
     }, []);
 
     useEffect(() => {
-        if(decimals === undefined) return; 
+        if(decimals === undefined || wallet === undefined) return; 
 
         (async () => {
-            if(wallet !== undefined) {
-                console.log("Fetching Account Balance");
-                setLoading(true);
 
-                const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, wallet);
-                const address = await wallet.getAddress()
-                console.log("address", address);
+            const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, wallet);
+            const address = await wallet.getAddress()
 
-                setAddress(address);
+            setLoading(true);
+            pai.balanceOf(address)
+            .then((balance:ethers.BigNumber) => {
+                console.log("Got Balance");
+                dispatch({type: "set_balance", payload: ethers.utils.formatUnits(balance, decimals)});
+            })
+            .catch((error:any) => { throw error })
+            .finally(() => setLoading(false));
 
-                console.log("Fetching Account Balance");
-                await pai.balanceOf(address)
-                .then((balance:ethers.BigNumber) => {
-                    console.log("decimals", decimals);
-                    console.log("Balance", balance.toString(), ethers.utils.formatUnits(balance, decimals));
-                    setBalance(ethers.utils.formatUnits(balance, decimals))
-                })
-                .catch((error:any) => { throw error })
-                .finally(() => setLoading(false));
-            }
         })();
     }, [wallet, decimals]);
 
@@ -109,24 +108,26 @@ const Home = ({navigation}:HomeProps) => {
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content"/>
-        <View style={[styles.hero, {flex: 1}]}>
-            <View style={{flex: 1, alignItems: 'center', justifyContent: 'flex-end'}}>
-                <Text style={[styles.balance]}>{formatCurrency(balance || "0", 2, {prefix: '$'})}</Text>
-            </View>
-
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', marginTop: 8, marginBottom: 18, paddingHorizontal: 30, width: '100%'}}>
-                <View style={{flex: 1, marginRight: 9}}>
-                    <PaiButton category="danger" title="Send" iconName="upload" onPress={() => navigation.navigate("scan")} /> 
-                </View>
-                <View style={{flex: 1, marginLeft: 9}}>
-                    <PaiButton category="success" title="Receive" iconName="download" onPress={() => {}} /> 
-                </View>
+        <View style={[{flex: 4}, styles.hero]}>
+            <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                <Text style={styles.label}>Your Balance</Text>
+                <Text style={[styles.balance, {marginBottom: 40}]}>{formatCurrency(balance || "0", 2, {prefix: '$'})}</Text>
             </View>
         </View>
 
-        <View style={{flex: 1, width: "100%", paddingBottom: 40, alignItems: 'center', justifyContent: 'flex-end'}}>
-            <Text style={{fontFamily: 'FugazOne', fontSize: 16}}>Account</Text>
-            <Text style={{fontFamily: 'FugazOne', fontSize: 16}}>{shortenAddress(address || "").toLowerCase() || "no network"}</Text>
+        <View style={[{flex: 6}, styles.actionContainer]}>
+            <View style={{flex: 1, flexDirection: 'row', alignItems: 'flex-start' }}>
+                <View style={{flex: 9}}>
+                    <Button category="default" title="Send" iconName="upload" onPress={() => navigation.navigate("enter_amount")} /> 
+                </View>
+                <View style={{flex: 2}}><Text>&nbsp;</Text></View>
+                <View style={{flex: 9}}>
+                    <Button category="default" title="Receive" iconName="download" onPress={() => {navigation.navigate("account_info")}} /> 
+                </View>
+            </View>
+            <View style={{flex: 3, backgroundColor: Colors.OFF_WHITE,  borderWidth: 0, borderRadius: 8, padding: 8, marginBottom: 40}}>
+                <TransactionHistory address={wallet?.address} />
+            </View>
         </View>
       </View>
     );
@@ -137,52 +138,47 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    backgroundColor: "#dee2e6"
-  },
-
-  brand: {
-      fontFamily: 'FugazOne',
-      fontSize: 18,
-      color:'#e63946' 
-  },
-
-  tagLine: {
-      fontFamily: "Montserrat-Bold",
-      marginTop: 5,
-      fontSize: 14,
-      color:'#f1faee' 
   },
 
   hero: {
     padding: 8,
     backgroundColor: '#2961EC',
-    borderBottomRightRadius: 20,
-    borderBottomLeftRadius: 20,
     borderTopWidth: 0,
     width: '100%',
     alignItems: 'center', 
     justifyContent: 'center'
   },
 
-  label: {
-      fontSize: 34,
-      fontFamily: "Montserrat-Bold",
-      color: "#f1faee",
+  actionContainer: {
+    marginTop: -20,
+    paddingTop: 10,
+    paddingHorizontal: 30,
+    width: '100%',
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+    backgroundColor: '#1951DC'
   },
 
+  label: {
+      fontSize: 18,
+      fontFamily: "Montserrat-Bold",
+      color: Colors.WHITE,
+      marginBottom: 5,
+  },
 
   balance: {
       fontSize: 42,
       fontWeight: 'bold',
-      color: "#f1faee",
+      color: Colors.WHITE,
 
   },
 
   buttonText: {
     fontSize: 17, 
-    color: 'white', 
+    color: Colors.WHITE,
     fontWeight: 'bold' 
   },
+
 
 });
 

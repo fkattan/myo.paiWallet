@@ -12,12 +12,16 @@ export type ApplicationState = {
   auth: AuthState | undefined,
   provider: ethers.providers.JsonRpcProvider | undefined,
   wallet?: ethers.Wallet | undefined,
+  balance: string,
+  decimals: ethers.BigNumber | undefined,
   error: string | undefined,
 };
 
 type AppAction = 
   {type: 'auth_success'} |
   {type: 'auth_failure'} |
+  {type: 'set_decimals', payload:ethers.BigNumber}  |
+  {type: 'set_balance', payload:string}  |
   {type: 'set_provider', payload: ethers.providers.JsonRpcProvider} |
   {type: 'set_wallet', payload: ethers.Wallet} |
   {type:'error', error: string|undefined};
@@ -40,15 +44,23 @@ function AppStateReducer(state:ApplicationState, action:AppAction):ApplicationSt
     }
 
     case 'set_wallet': {
-      return { ...state, wallet: action.payload}
+      return { ...state, wallet: action.payload }
+    }
+
+    case 'set_balance': {
+      return { ...state, balance: action.payload }
+    }
+
+    case 'set_decimals': {
+      return { ...state, decimals: action.payload}
     }
 
     case 'auth_success': {
-      return { ...state, auth: AuthState.success}
+      return { ...state, auth: AuthState.success }
     }
 
     case 'auth_failure': {
-      return { ...state, auth: AuthState.failure}
+      return { ...state, auth: AuthState.failure }
     }
 
     case 'error': {
@@ -65,6 +77,8 @@ const initialState:ApplicationState = {
   auth: AuthState.undefined,
   provider: undefined, 
   error: undefined,
+  balance: "0",
+  decimals: undefined,
 };
 
 function AppProvider({children, state}:AppStateProviderProps) {

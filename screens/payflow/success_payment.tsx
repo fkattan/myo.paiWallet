@@ -3,12 +3,17 @@ import React, { useEffect } from 'react';
 import { StatusBar, View, StyleSheet, Image, Text, Pressable} from 'react-native';
 import {useAppContext} from '../../app_context';
 
-const PendingPayment = () => {
+type SuccessPaymentScreenProps = {
+    route:any,
+    navigation:any
+};
+
+const PendingPayment = ({navigation}:SuccessPaymentScreenProps) => {
 
     const [state, dispatch] = useAppContext();
 
     const ContinueButton = () => (
-        <Pressable onPress={() => {}} style={{marginTop: 18}}>
+        <Pressable onPress={() => navigation.navigate("home")} style={{marginTop: 18}}>
             <View style={styles.buttonContainer}>
                 <Text style={styles.buttonText}>Continue</Text>
             </View>
@@ -19,11 +24,11 @@ const PendingPayment = () => {
     return (
         <View style={styles.container}>
             <StatusBar hidden={true} />
-            <View style={{flex:1, alignItems: 'center', justifyContent: 'center'}}>
-                <Image source={require("../../assets/success.png")} style={{marginBottom: 40}} /> 
+            <View style={{flex:1, alignItems: 'center', justifyContent: 'center', width: '100%'}}>
+                <Image source={require("../../assets/success.png")} style={{resizeMode: 'contain', width: '100%'}} /> 
+                <Text style={styles.message}>Your payment has been processed!!</Text>
             </View>
             <View>
-                <Text>Congratulations, your payment has been processed !! Have a nice day.</Text>
                 <ContinueButton />
             </View>
         </View>
@@ -33,8 +38,24 @@ const PendingPayment = () => {
 const styles = StyleSheet.create({
     container: {
         flex:1,
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
+        paddingHorizontal: 20,
+        paddingBottom: 40
+    },
+
+    title: {
+        fontFamily: 'Montserrat-Bold',
+        fontSize: 16,
+        marginBottom: 20
+    },
+
+    message: {
+        fontFamily: 'Montserrat-Bold',
+        lineHeight: 22,
+        fontSize: 16,
+        textAlign: 'center'
     },
 
     buttonContainer: { 
@@ -51,6 +72,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: "#FFF"
     },
-})
+});
+
 
 export default PendingPayment;

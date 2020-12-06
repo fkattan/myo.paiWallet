@@ -13,9 +13,7 @@ import {useAppContext} from '../../app_context';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 
 import {toWei} from '../../utils/currency_helpers';
-import { _TypedDataEncoder } from 'ethers/lib/utils';
-
-const BN = ethers.BigNumber;
+// import { _TypedDataEncoder } from 'ethers/lib/utils';
 
 type PayProps = {
     route:any,
@@ -64,11 +62,10 @@ const Pay = ({route, navigation}:PayProps) => {
             ]
         };
 
-        console.log("Payload", _TypedDataEncoder.getPayload(domain, types, values));
+        // console.log("Payload", _TypedDataEncoder.getPayload(domain, types, values));
 
         const signature = await walletProvider._signTypedData(domain, types, values);
         const rsvSignature = ethers.utils.splitSignature(signature);
-        console.log("Signature RSV", rsvSignature);
 
         return rsvSignature;
     }
@@ -82,10 +79,7 @@ const Pay = ({route, navigation}:PayProps) => {
         const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
         const walletProvider = wallet.connect(provider);
 
-        const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, wallet);
-
-
-        await provider.getCode(L2_PAI_ADDRESS).then(code => console.log("Code:", code));
+        const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, walletProvider);
 
         const signerAddress = await walletProvider.getAddress();
         const chainId = await walletProvider.getChainId();
@@ -107,7 +101,6 @@ const Pay = ({route, navigation}:PayProps) => {
         .then(async (response:ethers.providers.TransactionResponse) => {
             console.log(response)
             navigation.navigate("pending_payment", {txHash: response.hash})
-            // await response.wait(2)
         })
         .catch((error:any) => console.log(error))
         .finally(() => setLoading(false));

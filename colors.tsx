@@ -1,0 +1,13 @@
+export const PRIMARY_BLUE="#347AF0";
+export const RED="#DF5060";
+export const GREEN="#75BF72";
+export const DARK_GREEN="#3E963A";
+export const WHITE="#FFFFFF";
+export const BLACK="#000000";
+export const MIDNIGHT_BLUE="#0D1F3C";
+export const YELLOW="#FDB32A";
+export const GRAY="#B5BBC9";
+export const MEDIUM_GRAY="#7B8FAD";
+export const DARK_GRAY="#3D4C63";
+export const LIGHT_GRAY="#CFD2D8";
+export const OFF_WHITE="#F5F6F7";
