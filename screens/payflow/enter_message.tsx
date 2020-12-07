@@ -6,6 +6,8 @@ import { TextInput } from "react-native-gesture-handler";
 import { formatCurrency } from "../../utils/currency_helpers";
 
 import Button from '../../components/button';
+import i18n from 'i18n-js';
+import { titleize } from "../../utils/text_helpers";
 
 type EnterRecipientProps = {
     route:any,
@@ -27,13 +29,21 @@ const EnterMessage = ({route, navigation}:EnterRecipientProps) => {
             <StatusBar barStyle="dark-content"/>
             <View style={{flex: 1, justifyContent: 'center'}}>
                 <View style={[styles.inputTextContainer, {borderBottomColor: hasFocus ? "#347AF0" : "#CFD2D8", backgroundColor: "#CFCFCF50"}]}>
-                    <TextInput multiline textAlignVertical="top" value={message} onChangeText={(text) => setMessage(text)} placeholder="Leave a Message" style={styles.inputField} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} />
+                    <TextInput
+                        multiline
+                        textAlignVertical="top" 
+                        value={message} 
+                        onChangeText={(text) => setMessage(text)} 
+                        placeholder={titleize(i18n.t("optionally_leave_a_message"))}
+                        style={styles.inputField} 
+                        onFocus={() => setFocus(true)} 
+                        onBlur={() => setFocus(false)} />
                 </View>
 
             </View>
 
             <View style={{flex: 2}}>
-                <Button title="Review Payment" onPress={onReviewPayment} category="primary" />
+                <Button title={titleize(i18n.t("review_payment"))} onPress={onReviewPayment} category="primary" />
             </View>
         </View>
     )

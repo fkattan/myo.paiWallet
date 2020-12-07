@@ -9,6 +9,9 @@ import { formatCurrency } from "../../utils/currency_helpers";
 import { useAppContext } from "../../app_context";
 import { ethers } from "ethers";
 
+import i18n from 'i18n-js';
+import { capitalize, titleize } from '../../utils/text_helpers';
+
 type EnterAmountProps = {
     navigation: any
 }
@@ -17,6 +20,7 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
 
     const [amount, setAmount] = useState<string>("0");
     const [overdraft, setOverdraft] = useState<boolean>(false);
+    const [isZero, setZero] = useState<boolean>(true);
 
     const handleChangeAmount = (value:string) => setAmount(value);
 
@@ -24,16 +28,14 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
     const {balance, decimals} = state;
 
     useEffect(() => {
-        if(balance.length === 0 || amount.length === 0) return; 
+        if(balance.length === 0) return; 
 
         const balanceBn = ethers.utils.parseUnits(balance, decimals);
-        const amountBn = ethers.utils.parseUnits(amount, decimals);
+        const amountBn = ethers.utils.parseUnits(amount || "0", decimals);
 
-        if(amountBn.gt(balanceBn)) {
-            setOverdraft(true);
-        } else {
-            setOverdraft(false);
-        }
+        setOverdraft(amountBn.gt(balanceBn) ? true : false);
+        setZero(amountBn.eq(ethers.BigNumber.from("0")) ? true : false);
+        console.log("isZero: ", isZero, amountBn.toString());
 
     }, [amount]);
 
@@ -45,7 +47,7 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" />
             <View style={{flex:0.5, alignItems: 'center', justifyContent: 'flex-end', width: '100%'}}>
-                <Text style={styles.balance}>Available {formatCurrency(balance, 2, {prefix: '$'})}</Text>
+                <Text style={styles.balance}>{capitalize(i18n.t("available"))} {formatCurrency(balance, 2, {prefix: '$'})}</Text>
             </View>
 
             <View style={{flex:1, alignItems: 'center', justifyContent: 'flex-end'}}>
@@ -53,7 +55,7 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
             </View>
 
             <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%'}}>
-                <Button title="Enter Recipient" onPress={onEnterRecipient} category="primary" disabled={overdraft ? true : false} />
+                <Button title={titleize(i18n.t("enter_recipient"))} onPress={onEnterRecipient} category="primary" disabled={overdraft || isZero ? true : false} />
             </View>
 
             <View style={[styles.keypadContainer, {flex:3}]}>

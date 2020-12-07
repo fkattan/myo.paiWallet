@@ -3,6 +3,8 @@ import * as LocalAuthentication from 'expo-local-authentication';
 
 import { StatusBar, View, Text, StyleSheet, Pressable, Image} from 'react-native';
 import {useAppContext} from '../../app_context';
+import { capitalize } from '../../utils/text_helpers';
+import i18n from 'i18n-js';
 
 const SignIn = () => {
 
@@ -34,7 +36,7 @@ const SignIn = () => {
     const AuthButton = () => (
         <Pressable onPress={handleSignIn} style={{marginTop: 18}}>
             <View style={styles.buttonContainer}>
-                <Text style={styles.buttonText}>Authenticate</Text>
+                <Text style={styles.buttonText}>{capitalize(i18n.t("authenticate"))}</Text>
             </View>
         </Pressable>
     );

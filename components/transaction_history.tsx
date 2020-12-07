@@ -6,6 +6,8 @@ import * as Colors from '../colors';
 import {ethers} from 'ethers';
 import {L2_PROVIDER_URL} from '../constants';
 import TransferEventListItem from './transfer_event_list_item';
+import i18n from 'i18n-js';
+import {titleize} from '../utils/text_helpers';
 
 const MOCK_DATA = 
 [ { blockNumber: 5196629,
@@ -131,8 +133,8 @@ const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
     if(transactions === undefined || transactions.length === 0) {
         return (
             <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                <Feather name="inbox" size={48} color={Colors.DARK_GRAY} />
-                <Text style={styles.noActivityText}>No Activity</Text>
+                <Feather name="inbox" size={48} color={Colors.WHITE} />
+                <Text style={styles.noActivityText}>{titleize(i18n.t("no_activity"))}</Text>
             </View>
         );
     }
@@ -144,7 +146,7 @@ const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
             keyExtractor={(item) => item.transactionHash}
             onRefresh={getTransactions}
             renderItem={({item}) => {
-                return (<TransferEventListItem log={item} itemContainerStyles={styles.item} />);
+                return (<TransferEventListItem log={item} itemContainerStyles={styles.item} textStyles={styles.itemText} />);
             }}>
 
         </FlatList>
@@ -158,17 +160,21 @@ const styles = StyleSheet.create({
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'center',
-      padding: 8,
-      backgroundColor: Colors.LIGHT_GRAY,
+      padding: 12,
+      backgroundColor: Colors.PRIMARY_BLUE,
       borderRadius: 6,
-      marginBottom: 3
+      marginBottom: 12
 
+  },
+
+  itemText: {
+      color: Colors.WHITE
   },
 
   noActivityText: {
     fontFamily: 'FugazOne',
     fontSize:20,
-    color: Colors.DARK_GRAY,
+    color: Colors.OFF_WHITE,
     marginTop:8
   }
 

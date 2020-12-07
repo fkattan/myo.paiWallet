@@ -3,6 +3,9 @@ import React, { useEffect } from 'react';
 import { StatusBar, View, StyleSheet, Image, Text, Pressable} from 'react-native';
 import {useAppContext} from '../../app_context';
 
+import {capitalize} from '../../utils/text_helpers';
+import i18n from 'i18n-js';
+
 type SuccessPaymentScreenProps = {
     route:any,
     navigation:any
@@ -15,7 +18,7 @@ const PendingPayment = ({navigation}:SuccessPaymentScreenProps) => {
     const ContinueButton = () => (
         <Pressable onPress={() => navigation.navigate("home")} style={{marginTop: 18}}>
             <View style={styles.buttonContainer}>
-                <Text style={styles.buttonText}>Continue</Text>
+                <Text style={styles.buttonText}>{capitalize(i18n.t("back_to_wallet"))}</Text>
             </View>
         </Pressable>
     );
@@ -26,7 +29,7 @@ const PendingPayment = ({navigation}:SuccessPaymentScreenProps) => {
             <StatusBar hidden={true} />
             <View style={{flex:1, alignItems: 'center', justifyContent: 'center', width: '100%'}}>
                 <Image source={require("../../assets/success.png")} style={{resizeMode: 'contain', width: '100%'}} /> 
-                <Text style={styles.message}>Your payment has been processed!!</Text>
+                <Text style={styles.message}>{capitalize(i18n.t("your_payment_has_been_processed"))}</Text>
             </View>
             <View>
                 <ContinueButton />

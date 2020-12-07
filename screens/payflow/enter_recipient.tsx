@@ -8,6 +8,8 @@ import { formatCurrency } from "../../utils/currency_helpers";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Button from '../../components/button';
+import i18n from 'i18n-js';
+import { titleize, capitalize } from "../../utils/text_helpers";
 
 type EnterRecipientProps = {
     route:any,
@@ -47,7 +49,7 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" />
             <View style={{flex: 0.25, justifyContent: 'flex-end'}}>
-                <Text style={styles.amountLegend}>Sending: {formatCurrency(route.params.amount, 2, {prefix: "$"})}</Text>
+                <Text style={styles.amountLegend}>{capitalize(i18n.t("amount_to_send"))}: {formatCurrency(route.params.amount, 2, {prefix: "$"})}</Text>
             </View>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                 <View style={{flex: 1, justifyContent: 'center'}}>
@@ -61,7 +63,7 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
             </TouchableWithoutFeedback>
 
             <View style={{flex: 2}}>
-                <Button title="Add a Message" onPress={onEnterMessage} category="primary" disabled={disabled} />
+                <Button title={titleize(i18n.t("continue"))} onPress={onEnterMessage} category="primary" disabled={disabled} />
             </View>
         </View>
     )

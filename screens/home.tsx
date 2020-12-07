@@ -17,6 +17,9 @@ import { useAppContext } from "../app_context";
 import { formatCurrency } from "../utils/currency_helpers";
 import TransactionHistory from "../components/transaction_history";
 
+import i18n from 'i18n-js';
+
+import {titleize, capitalize} from '../utils/text_helpers';
 
 type HomeProps = {
     navigation:any
@@ -100,7 +103,7 @@ const Home = ({navigation}:HomeProps) => {
     if(loading || !initialized) return (
         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#e63946'}}>
             <StatusBar hidden={true} />
-            <Text style={{fontSize: 24, fontWeight: 'bold', marginBottom: 24, fontFamily: "FugazOne", color: '#f1faee'}}>LOADING</Text>
+            <Text style={{fontSize: 24, fontWeight: 'bold', marginBottom: 24, fontFamily: "FugazOne", color: '#f1faee'}}>{i18n.t("loading").toUpperCase()}</Text>
             <ActivityIndicator size="large" color="#f1faee" />
         </View>
     );
@@ -110,7 +113,7 @@ const Home = ({navigation}:HomeProps) => {
         <StatusBar barStyle="light-content"/>
         <View style={[{flex: 4}, styles.hero]}>
             <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-                <Text style={styles.label}>Your Balance</Text>
+                <Text style={styles.label}>{titleize(i18n.t("your_balance"))}</Text>
                 <Text style={[styles.balance, {marginBottom: 40}]}>{formatCurrency(balance || "0", 2, {prefix: '$'})}</Text>
             </View>
         </View>
@@ -118,14 +121,15 @@ const Home = ({navigation}:HomeProps) => {
         <View style={[{flex: 6}, styles.actionContainer]}>
             <View style={{flex: 1, flexDirection: 'row', alignItems: 'flex-start' }}>
                 <View style={{flex: 9}}>
-                    <Button category="default" title="Send" iconName="upload" onPress={() => navigation.navigate("enter_amount")} /> 
+                    <Button category="default" title={capitalize(i18n.t("send"))} iconName="upload" onPress={() => navigation.navigate("enter_amount")} /> 
                 </View>
                 <View style={{flex: 2}}><Text>&nbsp;</Text></View>
                 <View style={{flex: 9}}>
-                    <Button category="default" title="Receive" iconName="download" onPress={() => {navigation.navigate("account_info")}} /> 
+                    <Button category="default" title={capitalize(i18n.t("receive"))} iconName="download" onPress={() => {navigation.navigate("account_info")}} /> 
                 </View>
             </View>
-            <View style={{flex: 3, backgroundColor: Colors.OFF_WHITE,  borderWidth: 0, borderRadius: 8, padding: 8, marginBottom: 40}}>
+            <View style={[{flex: 3}, styles.transactionHistoryContainer]}>
+                <Text style={styles.transactionHistoryTitle}>{titleize(i18n.t("latest_transactions"))}</Text>
                 <TransactionHistory address={wallet?.address} />
             </View>
         </View>
@@ -157,6 +161,17 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
     backgroundColor: '#1951DC'
+  },
+
+  transactionHistoryTitle: {
+      color: Colors.WHITE, 
+      marginBottom: 12,
+      fontFamily: 'Montserrat-Bold',
+      fontSize: 16
+  },
+
+  transactionHistoryContainer: {
+    marginBottom: 40
   },
 
   label: {

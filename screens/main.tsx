@@ -22,6 +22,8 @@ import { Button } from 'react-native';
 import { ethers } from 'ethers';
 import { L2_PROVIDER_URL } from '../constants';
 
+import i18n from 'i18n-js';
+import { titleize, capitalize } from '../utils/text_helpers';
 
 const Stack = createStackNavigator();
 
@@ -126,7 +128,8 @@ const Main = () => {
                 name="enter_amount"
                 component={EnterAmount} 
                 options={({navigation}) => ({
-                    title: "Enter Amount",
+                    title: titleize(i18n.t("enter_amount")),
+                    headerBackTitle: capitalize(i18n.t("back")),
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"
                     },
@@ -136,7 +139,8 @@ const Main = () => {
                 name="enter_recipient"
                 component={EnterRecipient} 
                 options={({navigation}) => ({
-                    title: "Choose Recipient",
+                    title: titleize(i18n.t("choose_recipient")),
+                    headerBackTitle: capitalize(i18n.t("back")),
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"
                     },
@@ -146,7 +150,8 @@ const Main = () => {
                 name="enter_message"
                 component={EnterMessage} 
                 options={({navigation}) => ({
-                    title: "Enter a Message",
+                    title: titleize(i18n.t("enter_message")),
+                    headerBackTitle: capitalize(i18n.t("back")),
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"
                     },
@@ -156,14 +161,15 @@ const Main = () => {
                 name="review_payment"
                 component={ReviewPayment} 
                 options={({navigation}) => ({
-                    title: "Confirm Payment",
+                    title: titleize(i18n.t("confirm_payment")),
+                    headerBackTitle: capitalize(i18n.t("back")),
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"
                     },
                     headerRight: () => (
                         <Button
                           onPress={() => {navigation.navigate('home')}}
-                          title="Cancel"
+                          title={capitalize(i18n.t("cancel"))}
                         />
                     )
             })} />
@@ -172,7 +178,8 @@ const Main = () => {
                 name="scan"
                 component={ScanScreen} 
                 options={({navigation}) => ({
-                    headerBackTitle: "Cancel",
+                    title: capitalize(i18n.t("scan_qr")),
+                    headerBackTitle: capitalize(i18n.t("back")),
                     headerRight: () => null
                 })} />
 

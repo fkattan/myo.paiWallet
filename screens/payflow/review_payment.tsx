@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { StyleSheet, View, Text, StatusBar } from "react-native";
+import { StyleSheet, View, Text, StatusBar, ActivityIndicator } from "react-native";
 import { formatCurrency, toWei } from "../../utils/currency_helpers";
 
 import Button from '../../components/button';
@@ -11,6 +11,9 @@ import { L2_PAI_ADDRESS, L2_PROVIDER_URL } from "../../constants";
 import L2_PAI from '../../reference/L2_PAI.json';
 
 import eip712Sign from "../../utils/eip712_sign";
+
+import i18n from 'i18n-js';
+import {titleize, capitalize} from '../../utils/text_helpers';
 
 type EnterRecipientProps = {
     route:any,
@@ -65,24 +68,29 @@ const ReviewMessage = ({route, navigation}:EnterRecipientProps) => {
         <View style={styles.container}>
             <StatusBar barStyle="dark-content" />
             <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 8, padding: 20, width: '100%'}}>
+                {isLoading && (
+                    <View style={{flex: 0.25, alignItems: 'center', justifyContent: 'center'}}>
+                        <ActivityIndicator size="large" />
+                    </View>
+                )}
                 <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: "#CFD2D8", paddingVertical: 20, width: "100%"}}>
-                    <Text style={styles.label}>Recipient</Text>
+                    <Text style={styles.label}>{capitalize(i18n.t("recipient"))}</Text>
                     <Text style={styles.address}>{recipient.slice(0,24)}</Text>
                     <Text style={styles.address}>{recipient.slice(24)}</Text>
                 </View>
 
                 <View style={{flex: 1, alignItems: 'center', justifyContent: 'center',  width: '100%', borderBottomWidth: 1, borderBottomColor: "#CFD2D8", paddingVertical: 20}}>
-                    <Text style={styles.label}>Memo</Text>
+                    <Text style={styles.label}>{capitalize(i18n.t("memo"))}</Text>
                     <Text style={styles.message}>{message}</Text>
                 </View>
 
                 <View style={{flex: 2, marginTop: 40, alignItems: 'center'}}>
-                    <Text style={styles.label}>Amount</Text>
+                    <Text style={styles.label}>{capitalize(i18n.t("amount"))}</Text>
                     <Text style={styles.amount}>{formatCurrency(amount, 2, {prefix: "$"})}</Text>
                 </View>
 
                 <View style={{flex: 1}}>
-                    <Button title="Confirm Payment" onPress={onConfirmPayment} category="primary" />
+                    <Button title={titleize(i18n.t("confirm_payment"))} onPress={onConfirmPayment} category="primary" disabled={isLoading} />
                 </View>
             </View>
 

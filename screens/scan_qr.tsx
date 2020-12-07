@@ -3,6 +3,9 @@ import { Text, View, StyleSheet, Button, Vibration, Dimensions, Platform } from 
 import { BarCodeEvent, BarCodeScannedCallback, BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
 import * as Svg from 'react-native-svg';
 
+import {titleize} from '../utils/text_helpers';
+import i18n from 'i18n-js';
+
 type ScannerParams = {
   navigation:any,
   route: any
@@ -218,7 +221,7 @@ export default function ScanQR({route, navigation}:ScannerParams) {
       )}
 
       <View style={styles.toolbar}>
-        <Text style={styles.labelText}>Scan QR to Continue</Text>
+        <Text style={styles.labelText}>{titleize(i18n.t("scan_qr_to_continue"))}</Text>
       </View>
     </View>
   );

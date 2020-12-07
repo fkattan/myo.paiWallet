@@ -8,6 +8,9 @@ import {L2_PROVIDER_URL} from '../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppContext } from '../app_context';
 import { formatCurrency } from '../utils/currency_helpers';
+import { capitalize } from '../utils/text_helpers';
+
+import i18n from 'i18n-js';
 
 const MONTHS_3LETTER = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 
@@ -61,8 +64,8 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
 
     return(
         <View style={itemContainerStyles} key={"TrasferItem_" + log.transactionHash}>
-            <View style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: direction === DirectionEnum.OUT ? Colors.RED : Colors.DARK_GREEN, marginRight: 8}}>
-                <Feather name={direction === DirectionEnum.OUT ? "arrow-up-left" : "arrow-down-right"} size={15} color={direction === DirectionEnum.OUT ? Colors.RED : Colors.DARK_GREEN}/>
+            <View style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: direction === DirectionEnum.OUT ? Colors.PRIMARY_BLUE_TRIADIC_DANGER : Colors.PRIMARY_BLUE_TRIADIC_SUCCESS, marginRight: 8}}>
+                <Feather name={direction === DirectionEnum.OUT ? "arrow-up-left" : "arrow-down-right"} size={15} color={direction === DirectionEnum.OUT ? Colors.PRIMARY_BLUE_TRIADIC_DANGER : Colors.PRIMARY_BLUE_TRIADIC_SUCCESS}/>
             </View>
             <View style={{flex:4, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start'}}>
                 <View style={{flex: 1, flexDirection: 'row'}}>
@@ -71,7 +74,7 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
                         {amount ? formatCurrency(ethers.utils.formatUnits(amount, decimals || 18), 2, {prefix: "$"}) : "--"}
                     </Text>
                 </View>
-                <Text style={{flex: 1, ...textStyles, fontSize: 12, color: '#3D4C63'}}>{description || "No description available"}</Text>
+                <Text style={{flex: 1, fontSize: 12, color: '#3D4C63', ...textStyles,}}>{description || capitalize(i18n.t("no_description_available"))}</Text>
             </View>
         </View>
     )

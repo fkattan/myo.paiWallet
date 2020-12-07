@@ -5,6 +5,9 @@ import { StatusBar, View, StyleSheet, Image, ActivityIndicator, Text} from 'reac
 import {useAppContext} from '../../app_context';
 import { L2_PROVIDER_URL } from '../../constants';
 
+import {capitalize} from '../../utils/text_helpers';
+import i18n from 'i18n-js';
+
 type PendingPaymentScreenProps = {
     route:any,
     navigation:any
@@ -37,7 +40,7 @@ const PendingPayment = ({route, navigation}:PendingPaymentScreenProps) => {
             <StatusBar hidden={true} />
             <View style={{flex:1, alignItems: 'center', justifyContent: 'center', width: '100%'}}>
                 <Image source={require("../../assets/working.png")} style={{resizeMode: 'contain', width: '100%'}} /> 
-                <Text style={styles.title}>Working ...</Text>
+                <Text style={styles.title}>{capitalize(i18n.t("working"))} ...</Text>
                 <ActivityIndicator animating={true} size="large" />
             </View>
         </View>

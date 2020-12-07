@@ -3,6 +3,9 @@ import React, { useEffect } from 'react';
 import { StatusBar, View, StyleSheet, Image, Text, Pressable} from 'react-native';
 import {useAppContext} from '../../app_context';
 
+import {capitalize} from '../../utils/text_helpers';
+import i18n from 'i18n-js';
+
 const PendingPayment = () => {
 
     const [state, dispatch] = useAppContext();
@@ -23,7 +26,7 @@ const PendingPayment = () => {
                 <Image source={require("../../assets/error.png")} style={{marginBottom: 40}} /> 
             </View>
             <View>
-                <Text>An error has occurred, your payment has not been processed</Text>
+                <Text>{capitalize(i18n.t("payment_error"))}</Text>
                 <ContinueButton />
             </View>
         </View>
