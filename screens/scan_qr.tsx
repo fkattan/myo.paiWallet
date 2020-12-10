@@ -5,6 +5,7 @@ import * as Svg from 'react-native-svg';
 
 import {titleize} from '../utils/text_helpers';
 import i18n from 'i18n-js';
+import { usePayflowDispatch } from './payflow/payflow_context';
 
 type ScannerParams = {
   navigation:any,
@@ -16,6 +17,8 @@ export default function ScanQR({route, navigation}:ScannerParams) {
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [scanned, setScanned] = useState<boolean>(false);
   const [canvas, setCanvas] = useState<{width:any, height:any}>();
+
+  const payflowDispatch = usePayflowDispatch();
 
   const BUTTON_COLOR = Platform.OS === 'ios' ? '#fff' : '#FF0000';
 
@@ -50,7 +53,8 @@ export default function ScanQR({route, navigation}:ScannerParams) {
     if(data.startsWith("ethereum:")) {
       setScanned(true);
       Vibration.vibrate();
-      navigation.navigate("enter_recipient", {recipient: data.replace(/^ethereum:/i, "").trim()});
+      payflowDispatch({type: 'set_recipient', payload: data.replace(/^ethereum:/i, "").trim() });
+      navigation.navigate("enter_recipient");
     } else {
       setScanned(false);
     }

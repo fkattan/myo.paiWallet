@@ -11,6 +11,10 @@ import { ethers } from "ethers";
 
 import i18n from 'i18n-js';
 import { capitalize, titleize } from '../../utils/text_helpers';
+import { usePayflowDispatch } from "./payflow_context";
+
+import * as Colors from '../../colors';
+import { LinearGradient } from "expo-linear-gradient";
 
 type EnterAmountProps = {
     navigation: any
@@ -27,6 +31,9 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
     const [state] = useAppContext();
     const {balance, decimals} = state;
 
+    const payflowDispatch = usePayflowDispatch();
+
+
     useEffect(() => {
         if(balance.length === 0) return; 
 
@@ -40,11 +47,12 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
     }, [amount]);
 
     const onEnterRecipient = () => {
-        navigation.navigate("enter_recipient", {amount});
+        payflowDispatch({type: 'set_amount', payload: amount});
+        navigation.navigate("enter_recipient");
     }
 
     return (
-        <View style={styles.container}>
+        <LinearGradient style={styles.container} colors={[Colors.LIGHT_GRAY, Colors.WHITE]} locations={[0, 0.5]}>
             <StatusBar barStyle="dark-content" />
             <View style={{flex:0.5, alignItems: 'center', justifyContent: 'flex-end', width: '100%'}}>
                 <Text style={styles.balance}>{capitalize(i18n.t("available"))} {formatCurrency(balance, 2, {prefix: '$'})}</Text>
@@ -61,8 +69,7 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
             <View style={[styles.keypadContainer, {flex:3}]}>
                 <NumericKeypad onChange={handleChangeAmount}/>
             </View>
-
-        </View>
+        </LinearGradient>
     )
 }
 
@@ -71,7 +78,8 @@ const styles = StyleSheet.create({
         flex: 1, 
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 20
+        paddingHorizontal: 20,
+        backgroundColor: Colors.WHITE
     },
 
     keypadContainer: {

@@ -1,4 +1,3 @@
-import HDWalletProvider from '@truffle/hdwallet-provider';
 import { ethers } from 'ethers';
 import React from 'react';
 

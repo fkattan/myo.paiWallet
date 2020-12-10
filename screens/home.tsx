@@ -20,6 +20,7 @@ import TransactionHistory from "../components/transaction_history";
 import i18n from 'i18n-js';
 
 import {titleize, capitalize} from '../utils/text_helpers';
+import { LinearGradient } from "expo-linear-gradient";
 
 type HomeProps = {
     navigation:any
@@ -34,34 +35,39 @@ const Home = ({navigation}:HomeProps) => {
 
     useEffect(() => {
 
-        console.log("Querying SecureStore");
+        console.log("Querying SecureStore", new Date().getTime());
 
         SecureStore.isAvailableAsync()
         .then(isSecureStoreAvailable => {
             if(!isSecureStoreAvailable) throw "SecureStore not available on Device";
-            console.log("Secure Store Available !!");
+            console.log("Secure Store Available !!", new Date().getTime());
         })
         .then(async () => {
 
-            console.log("Querying Mnemonic");
+            console.log("Querying Mnemonic", new Date().getTime());
             let mnemonic = await SecureStore.getItemAsync(MNEMONIC_KEY);
             if(mnemonic === null) {
                 mnemonic = await generateMnemonic();
                 await SecureStore.setItemAsync(MNEMONIC_KEY, mnemonic)
                 .catch((reason:any) => { throw reason });
             }
-            console.log("Got Mnemonic", mnemonic);
+            console.log("Got Mnemonic", mnemonic, new Date().getTime());
 
             const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-            const wallet = ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
+
+            console.log("Got Connected Wallet", new Date().getTime());
 
             const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
+            console.log("Got PAI Contract (L2)", new Date().getTime());
 
             pai.decimals()
             .then((result:ethers.BigNumber) => {
                 dispatch({type: 'set_decimals', payload:result})
             });
+            console.log("Got Decimals", new Date().getTime());
 
+            const wallet = ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
+            console.log("Got Wallet", new Date().getTime());
             dispatch({type: 'set_wallet', payload: wallet});
             setInitialized(true);
         })
@@ -92,7 +98,7 @@ const Home = ({navigation}:HomeProps) => {
 
     useEffect(() => {
         navigation.setOptions({headerStyle: {
-            backgroundColor: loading ? '#e63946' : '#2961EC', 
+            backgroundColor: loading ? Colors.RED_MONOCHROME : Colors.PRIMARY_BLUE_MONOCHROME_DARK,
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0, 
@@ -101,7 +107,7 @@ const Home = ({navigation}:HomeProps) => {
 
 
     if(loading || !initialized) return (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#e63946'}}>
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.RED_MONOCHROME}}>
             <StatusBar hidden={true} />
             <Text style={{fontSize: 24, fontWeight: 'bold', marginBottom: 24, fontFamily: "FugazOne", color: '#f1faee'}}>{i18n.t("loading").toUpperCase()}</Text>
             <ActivityIndicator size="large" color="#f1faee" />
@@ -111,17 +117,17 @@ const Home = ({navigation}:HomeProps) => {
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content"/>
-        <View style={[{flex: 4}, styles.hero]}>
+        <LinearGradient locations={[0.25, 0.95]} colors={[Colors.PRIMARY_BLUE_MONOCHROME_DARK, Colors.PRIMARY_BLUE]} style={[{flex: 4}, styles.hero]}>
             <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                 <Text style={styles.label}>{titleize(i18n.t("your_balance"))}</Text>
                 <Text style={[styles.balance, {marginBottom: 40}]}>{formatCurrency(balance || "0", 2, {prefix: '$'})}</Text>
             </View>
-        </View>
+        </LinearGradient>
 
         <View style={[{flex: 6}, styles.actionContainer]}>
             <View style={{flex: 1, flexDirection: 'row', alignItems: 'flex-start' }}>
                 <View style={{flex: 9}}>
-                    <Button category="default" title={capitalize(i18n.t("send"))} iconName="upload" onPress={() => navigation.navigate("enter_amount")} /> 
+                    <Button category="default" title={capitalize(i18n.t("send"))} iconName="upload" onPress={() => navigation.navigate("payflow")} /> 
                 </View>
                 <View style={{flex: 2}}><Text>&nbsp;</Text></View>
                 <View style={{flex: 9}}>
@@ -146,7 +152,6 @@ const styles = StyleSheet.create({
 
   hero: {
     padding: 8,
-    backgroundColor: '#2961EC',
     borderTopWidth: 0,
     width: '100%',
     alignItems: 'center', 
@@ -160,7 +165,7 @@ const styles = StyleSheet.create({
     width: '100%',
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
-    backgroundColor: '#1951DC'
+    backgroundColor: Colors.PRIMARY_BLUE_MONOCHROME_DARK
   },
 
   transactionHistoryTitle: {

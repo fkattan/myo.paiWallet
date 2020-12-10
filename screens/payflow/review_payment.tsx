@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-import { StyleSheet, View, Text, StatusBar, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Text, StatusBar, Animated } from "react-native";
 import { formatCurrency, toWei } from "../../utils/currency_helpers";
 
 import Button from '../../components/button';
@@ -14,6 +14,15 @@ import eip712Sign from "../../utils/eip712_sign";
 
 import i18n from 'i18n-js';
 import {titleize, capitalize} from '../../utils/text_helpers';
+import { TransactionStatus, usePayflowContext } from "./payflow_context";
+
+//@ts-ignore
+import ProgressBar from 'react-native-progress/Bar'; 
+
+import { FontAwesome } from '@expo/vector-icons'; 
+import  * as Colors from '../../colors';
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type EnterRecipientProps = {
     route:any,
@@ -21,76 +30,225 @@ type EnterRecipientProps = {
 }
 
 const ReviewMessage = ({route, navigation}:EnterRecipientProps) => {
-    const {recipient, amount, message}:{recipient:string, amount:string, message:string} = route.params;
-
-    const [isLoading, setLoading] = useState<boolean>(false);
 
     const {wallet} = useAppState();
+    const [payflowState, dispatch] = usePayflowContext();
+    const {recipient, amount, memo, txStatus, receipt} = payflowState;
 
-    const onConfirmPayment = async () => {
+    const [progress, setProgress] = useState<number>(0);
 
-        console.log("onPayPress", wallet === undefined, amount)
-        if(!wallet || !amount) throw "Invalid Signer or Payment Amount";
+    const undefinedOpacity = useRef(new Animated.Value(0)).current;
+    const inProgressOpacity = useRef(new Animated.Value(0)).current;
+    const successOpacity = useRef(new Animated.Value(0)).current;
+    const errorOpacity = useRef(new Animated.Value(0)).current;
 
-        setLoading(true);
+    const fadeIn = (value:Animated.Value, duration=1000) => {
+        return Animated.timing(value, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true
+        });
+    }
 
-        const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-        const walletProvider = wallet.connect(provider);
+    const fadeOut = (value:Animated.Value, duration=1000) => {
+        return Animated.timing(value, {
+            toValue: 0,
+            duration: duration,
+            useNativeDriver: true
+        });
+    }
 
-        const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, walletProvider);
+    const transitionToInProgress = () => {
+        fadeOut(undefinedOpacity, 250).start(() => {
+            dispatch({type: 'set_tx_status', payload: TransactionStatus.IN_PROGRESS});
+        });
+    }
 
-        const signerAddress = await walletProvider.getAddress();
-        const chainId = await walletProvider.getChainId();
-        const {timestamp} = await provider.getBlock(await provider.getBlockNumber());
-        const nonce = await walletProvider.getTransactionCount();
-        const metaNonce = await pai.nonces(signerAddress);
-        const deadline:string = ((timestamp + 1000) * 1000).toString();
-        const weiAmount = toWei(amount)
+    const transitionToSuccess = () => {
+        Animated.sequence([
+            Animated.delay(300),
+            fadeOut(inProgressOpacity, 1250)
+        ]).start(() => {
+            dispatch({type: 'set_tx_status', payload: TransactionStatus.SUCCESS});
+        });
+    }
 
-        const rsvSignature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
+    const transitionToError = () => {
+        Animated.sequence([
+            Animated.delay(300),
+            fadeOut(inProgressOpacity, 1250)
+        ]).start(() => {
+            dispatch({type: 'set_tx_status', payload: TransactionStatus.ERROR});
+        });
+    }
 
-        if(rsvSignature === undefined) {
-            console.log("Something went wrong; rsvSignature undefined");
-            return;
+    // Keep UI aligned to TX Status
+    useEffect(() => {
+        switch(txStatus) {
+            case TransactionStatus.UNDEFINED:
+                fadeIn(undefinedOpacity, 250).start();
+                break; 
+            
+            case TransactionStatus.IN_PROGRESS:
+                fadeIn(inProgressOpacity).start();
+                break;
+            
+            case TransactionStatus.SUCCESS: 
+                fadeIn(successOpacity).start();
+                break;
+            
+            case TransactionStatus.ERROR:
+                fadeIn(errorOpacity).start();
+                break;
+        }
+    }, [txStatus])
+
+    // Execute Payment when TX Status is set to IN_PROGRESS
+    useEffect(() => {
+        if(txStatus === TransactionStatus.IN_PROGRESS) {
+
+            if(!wallet || !amount || !recipient) {
+                console.error("Invalid wallet, amount, or recipient");
+                return;
+            }
+            processPaymentRequest(wallet, amount, recipient)
         }
 
-        // TODO: Send to relayer.
-        const tx = await pai.permit(signerAddress, recipient, weiAmount, deadline, rsvSignature.v, rsvSignature.r, rsvSignature.s, {nonce, gasLimit: 90000, gasPrice: 2000000000})
-        .then(async (response:ethers.providers.TransactionResponse) => {
-            console.log(response)
-            navigation.navigate("pending_payment", {txHash: response.hash})
-        })
-        .catch((error:any) => console.log(error))
-        .finally(() => setLoading(false));
+    }, [txStatus]);
+
+    // Store Memo field locally associated with this tx's hash
+    useEffect(() => {
+        if(txStatus === TransactionStatus.SUCCESS && receipt !== undefined && memo !== undefined) {
+            AsyncStorage.setItem(receipt.transactionHash, memo);
+        }
+    },[txStatus])
+
+
+    const onConfirmPayment = () => {
+
+        if(!wallet || !amount || !recipient) {
+            console.error("Invalid wallet, amount, or recipient");
+            throw "Invalid Signer or Payment Amount";
+        }
+
+        transitionToInProgress();
+    }
+
+    const processPaymentRequest = async (wallet:ethers.Wallet, amount:string, recipient:string) => {
+
+        setProgress(0.25);
+
+        try {
+            const provider = wallet.provider; // new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
+            const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, wallet);
+            // const walletProvider = wallet.connect(provider);
+            setProgress(0.30);
+
+            const signerAddress = await wallet.getAddress();
+            const chainId = await wallet.getChainId();
+            const {timestamp} = await provider.getBlock(await provider.getBlockNumber());
+            const nonce = await wallet.getTransactionCount();
+            const metaNonce = await pai.nonces(signerAddress);
+            const deadline:string = ((timestamp + 1000) * 1000).toString();
+            const weiAmount = toWei(amount)
+            setProgress(0.40);
+
+            const rsvSignature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
+            setProgress(0.50);
+
+            if(rsvSignature === undefined) {
+                console.log("Something went wrong; rsvSignature undefined");
+                return;
+            }
+
+            // TODO: Send to relayer.
+            const tx = await pai.permit(signerAddress, recipient, weiAmount, deadline, rsvSignature.v, rsvSignature.r, rsvSignature.s, {nonce, gasLimit: 90000, gasPrice: 2000000000})
+            .then(async (response:ethers.providers.TransactionResponse) => {
+
+                setProgress(0.75);
+                provider.waitForTransaction(response.hash)
+                .then((receipt:ethers.providers.TransactionReceipt) => {
+                    if(receipt.status !== 1) {
+                        // Reverted
+                        dispatch({type: 'error', error: `Reverted [status:${receipt.status}] hash: ${receipt.transactionHash}`});
+                        transitionToError();
+                    } else {
+                        setProgress(1);
+                        transitionToSuccess();
+                        dispatch({type: 'set_tx_receipt', payload: receipt});
+                    }
+                });
+            })
+            .catch((error:any) => console.log(error))
+
+        } catch(e) {
+            console.error(e);
+            transitionToError();
+        }
+    };
+
+    if(!recipient || !amount) {
+        return (
+            <View style={styles.container}>
+                <Text>Something went wrong</Text>
+            </View>
+        )
     }
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="dark-content" />
-            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 8, padding: 20, width: '100%'}}>
-                {isLoading && (
-                    <View style={{flex: 0.25, alignItems: 'center', justifyContent: 'center'}}>
-                        <ActivityIndicator size="large" />
+            <StatusBar barStyle="light-content" />
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%'}}>
+                <LinearGradient locations={[0.10, 0.90]} colors={[Colors.PRIMARY_BLUE, Colors.PRIMARY_BLUE_MONOCHROME_DARK]} style={{flex:0.5, width: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                        <Button 
+                            title={[TransactionStatus.SUCCESS, TransactionStatus.ERROR].indexOf(txStatus) !== -1 ? capitalize(i18n.t("back_to_wallet")) : capitalize(i18n.t("back"))} 
+                            category="default" 
+                            onPress={() => [TransactionStatus.SUCCESS, TransactionStatus.ERROR].indexOf(txStatus) !== -1 ? navigation.navigate('home') : navigation.goBack()}
+                            disabled={[TransactionStatus.SUCCESS, TransactionStatus.ERROR, TransactionStatus.UNDEFINED].indexOf(txStatus) === -1}
+                            />
+                </LinearGradient>
+                <View style={{flex: 1, marginTop: -20, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderColor: Colors.BLACK, width: "100%", backgroundColor: Colors.WHITE, paddingTop: 20, paddingBottom: 40}}>
+                    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: Colors.LIGHT_GRAY, paddingVertical: 20, width: "100%"}}>
+                        <Text style={styles.label}>{capitalize(i18n.t("recipient"))}</Text>
+                        <Text style={styles.address}>{recipient.slice(0,24)}</Text>
+                        <Text style={styles.address}>{recipient.slice(24)}</Text>
                     </View>
-                )}
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: "#CFD2D8", paddingVertical: 20, width: "100%"}}>
-                    <Text style={styles.label}>{capitalize(i18n.t("recipient"))}</Text>
-                    <Text style={styles.address}>{recipient.slice(0,24)}</Text>
-                    <Text style={styles.address}>{recipient.slice(24)}</Text>
-                </View>
 
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center',  width: '100%', borderBottomWidth: 1, borderBottomColor: "#CFD2D8", paddingVertical: 20}}>
-                    <Text style={styles.label}>{capitalize(i18n.t("memo"))}</Text>
-                    <Text style={styles.message}>{message}</Text>
-                </View>
+                    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center',  width: '100%', borderBottomWidth: 1, borderBottomColor: Colors.LIGHT_GRAY, paddingVertical: 20}}>
+                        <Text style={styles.label}>{capitalize(i18n.t("memo"))}</Text>
+                        <Text style={styles.message}>{memo}</Text>
+                    </View>
 
-                <View style={{flex: 2, marginTop: 40, alignItems: 'center'}}>
-                    <Text style={styles.label}>{capitalize(i18n.t("amount"))}</Text>
-                    <Text style={styles.amount}>{formatCurrency(amount, 2, {prefix: "$"})}</Text>
-                </View>
+                    <View style={{flex: 2, marginTop: 40, alignItems: 'center'}}>
+                        <Text style={styles.label}>{capitalize(i18n.t("amount"))}</Text>
+                        <Text style={styles.amount}>{formatCurrency(amount, 2, {prefix: "$"})}</Text>
+                    </View>
 
-                <View style={{flex: 1}}>
-                    <Button title={titleize(i18n.t("confirm_payment"))} onPress={onConfirmPayment} category="primary" disabled={isLoading} />
+                    {txStatus === TransactionStatus.UNDEFINED && (
+                        <Animated.View style={{flex: 2, alignItems: 'center', justifyContent: 'center', opacity: undefinedOpacity}}>
+                            <Button title={titleize(i18n.t("confirm_payment"))} onPress={() => onConfirmPayment() } category="primary" /> 
+                        </Animated.View>
+                    )}
+
+                    {txStatus === TransactionStatus.IN_PROGRESS && (
+                        <Animated.View style={{flex: 2, alignItems: 'center', justifyContent: 'center', opacity: inProgressOpacity}}>
+                            <ProgressBar progress={progress} color={Colors.PRIMARY_BLUE} borderRadius={0} height={2} width={200} borderColor={Colors.LIGHT_GRAY} />
+                        </Animated.View>
+                    )}
+
+                    {txStatus === TransactionStatus.SUCCESS && (
+                        <Animated.View style={{flex: 2, alignItems: 'center', justifyContent: 'center', opacity: successOpacity}}>
+                            <FontAwesome name="check-circle" color={Colors.GREEN} size={54} />
+                            <Text style={[styles.label, {marginTop: 8}]}>{capitalize(i18n.t('success'))}</Text>
+                        </Animated.View>
+                    )}
+
+                    {txStatus === TransactionStatus.ERROR && (
+                        <Animated.View style={{flex: 2, alignItems: 'center', justifyContent: 'center', opacity: errorOpacity}}>
+                            <FontAwesome name="info-circle" color={Colors.RED} size={54} />
+                            <Text style={[styles.label, {marginTop: 8}]}>{capitalize(i18n.t('error'))}</Text>
+                        </Animated.View>
+                    )}
                 </View>
             </View>
 
@@ -103,10 +261,6 @@ const styles = StyleSheet.create({
         flex: 1, 
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 10,
-        paddingTop: 20,
-        paddingBottom: 40,
-        backgroundColor: "#FFF"
     },
 
     label: {

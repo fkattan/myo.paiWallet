@@ -9,6 +9,8 @@ import { useAppContext } from "../app_context";
 import { shortenAddress } from "../utils/address_helpers";
 import { capitalize, titleize } from '../utils/text_helpers';
 import i18n from 'i18n-js';
+import * as Colors from "../colors";
+import { LinearGradient } from "expo-linear-gradient";
 
 
 type AccountInfoProps = {
@@ -49,7 +51,7 @@ const AccountInfo = ({navigation}:AccountInfoProps) => {
     }
 
     return (
-        <View style={styles.container}>
+        <LinearGradient style={styles.container} colors={[Colors.OFF_WHITE, Colors.LIGHT_GRAY]} locations={[0.50, 1]}>
             <StatusBar barStyle="dark-content"/>
 
             <View style={{flex: 2, alignItems: 'center', justifyContent: 'center'}}>
@@ -85,8 +87,7 @@ const AccountInfo = ({navigation}:AccountInfoProps) => {
                     <Text style={[styles.buttonText, {color: "#FFF", marginLeft: 8}]}>{capitalize(i18n.t("back"))}</Text>
                 </TouchableOpacity>
             </View>
-
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1, 
         alignItems: 'center', 
-        justifyContent: 'center'
+        justifyContent: 'center',
     },
 
     buttonContainer: {

@@ -1,78 +1,22 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
-import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from './home';
-import ScanScreen from './scan_qr';
+import PayflowEntry from './payflow/index';
 
-import EnterAmount from './payflow/enter_amount';
-import EnterRecipient from './payflow/enter_recipient';
-import EnterMessage from './payflow/enter_message';
-import ReviewPayment from './payflow/review_payment';
-
-// import PayScreen from './payflow/init_payment';
-import PendingPaymentScreen from './payflow/pending_payment';
-import SuccessPaymentScreen from './payflow/success_payment';
-import ErrorPaymentScreen from './payflow/error_payment';
 import AccountInfo from './account_info';
 
 import SignIn from './onboarding/signin';
 import { AuthState, useAppContext } from '../app_context';
-import { Button } from 'react-native';
-import { ethers } from 'ethers';
-import { L2_PROVIDER_URL } from '../constants';
-
-import i18n from 'i18n-js';
-import { titleize, capitalize } from '../utils/text_helpers';
+import  * as Colors from '../colors';
 
 const Stack = createStackNavigator();
-
-const PAIHeaderOptions = (bg:string, fg:string):StackNavigationOptions => ({
-    title: 'Peso Argentino Intangible',
-    headerLeft: () => undefined,
-    headerTitleAlign: 'center',
-    headerStyle: {
-        backgroundColor: bg,
-        elevation: 0,
-        shadowOpacity: 0,
-        borderBottomWidth: 0,
-    },
-    headerTintColor: fg,
-    headerTitleStyle: {
-        fontFamily: "Montserrat-Bold"
-    }
-});
 
 const Main = () => {
 
     const [ state, dispatch ] = useAppContext()
     const { auth, wallet } = state;
-
-    useEffect(() => {
-        if(wallet === undefined) return; 
-
-        console.log("Registering Listeners for ", wallet.address);
-        console.log("ID:", ethers.utils.id("Approval(address,address,uint256)"));
-
-        const filter = {
-            address: wallet.address,
-            topics: [
-                ethers.utils.id("Approval(address,address,uint256)")
-            ]
-        }
-
-        const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-
-        provider.on(filter, (log, event) => {
-            console.log("Log: ", log);
-            console.log("Event:", event);
-        });
-
-        return () => {
-            console.log("Unmount Main");
-        }
-
-    }, [wallet])
 
     if(auth !== AuthState.success) {
         return(
@@ -89,31 +33,38 @@ const Main = () => {
             <Stack.Screen
                 name="home"
                 component={HomeScreen}
-                options={{
+                options={({navigation}) => ({
                     title: 'Peso Argentino Intangible',
                     headerTitleAlign: 'center',
                     headerStyle: {
-                        backgroundColor: '#2961EC',
                         elevation: 0,
                         shadowOpacity: 0,
                         borderBottomWidth: 0,
                     },
-                    headerTintColor: '#FFF',
+                    headerTintColor: Colors.WHITE,
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"
                     }
-                }} 
+                })} 
+            />
+
+            <Stack.Screen
+                name="payflow"
+                component={PayflowEntry}
+                options={{
+                    headerShown: false
+                }}
             />
 
             <Stack.Screen
                 name="account_info"
                 component={AccountInfo}
-                options={{
+                options={({navigation}) => ({
                     title: 'Peso Argentino Intangible',
                     headerTitleAlign: 'center',
                     headerLeft: () => undefined,
                     headerStyle: {
-                        backgroundColor: '#EFEFEF',
+                        backgroundColor: Colors.OFF_WHITE,
                         elevation: 0,
                         shadowOpacity: 0,
                         borderBottomWidth: 0,
@@ -121,98 +72,9 @@ const Main = () => {
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"
                     }
-                }} 
+                })} 
             />
 
-            <Stack.Screen
-                name="enter_amount"
-                component={EnterAmount} 
-                options={({navigation}) => ({
-                    title: titleize(i18n.t("enter_amount")),
-                    headerBackTitle: capitalize(i18n.t("back")),
-                    headerTitleStyle: {
-                        fontFamily: "Montserrat-Bold"
-                    },
-            })} />
-
-            <Stack.Screen
-                name="enter_recipient"
-                component={EnterRecipient} 
-                options={({navigation}) => ({
-                    title: titleize(i18n.t("choose_recipient")),
-                    headerBackTitle: capitalize(i18n.t("back")),
-                    headerTitleStyle: {
-                        fontFamily: "Montserrat-Bold"
-                    },
-            })} />
-
-            <Stack.Screen
-                name="enter_message"
-                component={EnterMessage} 
-                options={({navigation}) => ({
-                    title: titleize(i18n.t("enter_message")),
-                    headerBackTitle: capitalize(i18n.t("back")),
-                    headerTitleStyle: {
-                        fontFamily: "Montserrat-Bold"
-                    },
-            })} />
-
-            <Stack.Screen
-                name="review_payment"
-                component={ReviewPayment} 
-                options={({navigation}) => ({
-                    title: titleize(i18n.t("confirm_payment")),
-                    headerBackTitle: capitalize(i18n.t("back")),
-                    headerTitleStyle: {
-                        fontFamily: "Montserrat-Bold"
-                    },
-                    headerRight: () => (
-                        <Button
-                          onPress={() => {navigation.navigate('home')}}
-                          title={capitalize(i18n.t("cancel"))}
-                        />
-                    )
-            })} />
-
-            <Stack.Screen
-                name="scan"
-                component={ScanScreen} 
-                options={({navigation}) => ({
-                    title: capitalize(i18n.t("scan_qr")),
-                    headerBackTitle: capitalize(i18n.t("back")),
-                    headerRight: () => null
-                })} />
-
-
-            {/* <Stack.Screen
-                name="pay"
-                component={PayScreen} 
-                options={({navigation}) => ({
-                    headerRight: () => (
-                        <Button
-                          onPress={() => {navigation.navigate('home')}}
-                          title="Cancel"
-                        />
-                    )
-                })} /> */}
-
-            <Stack.Screen
-                name="pending_payment"
-                component={PendingPaymentScreen} 
-                options={() => PAIHeaderOptions('#efefefef', '#000')}
-            />
-
-            <Stack.Screen
-                name="success_payment"
-                component={SuccessPaymentScreen} 
-                options={() => PAIHeaderOptions('#efefefef', '#000')}
-            />
-
-            <Stack.Screen
-                name="error_payment"
-                component={ErrorPaymentScreen} 
-                options={() => PAIHeaderOptions('#efefefef', '#000')}
-            />
 
         </Stack.Navigator>
     );

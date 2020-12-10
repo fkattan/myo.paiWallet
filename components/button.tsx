@@ -37,6 +37,7 @@ const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps
     }
 
     const handleOnPress = (event:GestureResponderEvent) => {
+        console.log("Pressable onPress", Date.now().toString());
         if(disabled === undefined || disabled !== true) {
             onPress(event);
         }

@@ -13,6 +13,8 @@ export default {
     no_activity: "no activity",
     copy: "copy",
     share: "share",
+    success: "success",
+    error: "error",
     
     scan_qr: "Scan QR",
     scan_qr_to_continue: "scan qr to continue",

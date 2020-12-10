@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { _TypedDataEncoder } from "ethers/lib/utils";
 import { L2_PAI_ADDRESS, L2_PROVIDER_URL } from "../constants";
 
 const eip712Sign = async (
@@ -12,8 +13,8 @@ const eip712Sign = async (
 ) => {
   if (wallet === undefined) return undefined;
 
-  const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-  const walletProvider = wallet.connect(provider);
+  // const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
+  // const walletProvider = wallet.connect(provider);
 
   const domain = {
     name: "Peso Argentino Intangible",
@@ -40,9 +41,7 @@ const eip712Sign = async (
     ],
   };
 
-  // console.log("Payload", _TypedDataEncoder.getPayload(domain, types, values));
-
-  const signature = await walletProvider._signTypedData(domain, types, values);
+  const signature = await wallet._signTypedData(domain, types, values);
   const rsvSignature = ethers.utils.splitSignature(signature);
 
   return rsvSignature;

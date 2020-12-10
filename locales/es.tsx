@@ -13,6 +13,8 @@ export default {
     no_activity: "sin actividad",
     copy: "copiar",
     share: "compartir",
+    success: "Pago Confirmado",
+    error: "Pago No Realizado",
 
     scan_qr: "Scan QR",
     scan_qr_to_continue: "scan qr to para continuar",

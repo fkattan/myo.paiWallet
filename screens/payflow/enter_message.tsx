@@ -3,11 +3,14 @@ import {ethers} from 'ethers';
 
 import { StyleSheet, View, Text, StatusBar } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
-import { formatCurrency } from "../../utils/currency_helpers";
 
 import Button from '../../components/button';
 import i18n from 'i18n-js';
 import { titleize } from "../../utils/text_helpers";
+import { usePayflowDispatch } from "./payflow_context";
+
+import * as Colors from '../../colors';
+import { LinearGradient } from "expo-linear-gradient";
 
 type EnterRecipientProps = {
     route:any,
@@ -19,16 +22,18 @@ const EnterMessage = ({route, navigation}:EnterRecipientProps) => {
     const [message, setMessage] = useState<string>("");
     const [hasFocus, setFocus] = useState<boolean>(false);
 
+    const payflowDispatch = usePayflowDispatch();
 
     const onReviewPayment = () => {
-        navigation.navigate("review_payment", {message, amount: route.params.amount, recipient: route.params.recipient});
+        payflowDispatch({type: 'set_memo', payload: message})
+        navigation.navigate("review_payment");
     }
 
     return (
-        <View style={styles.container}>
+        <LinearGradient style={styles.container} colors={[Colors.LIGHT_GRAY, Colors.WHITE]} locations={[0, 0.5]}>
             <StatusBar barStyle="dark-content"/>
             <View style={{flex: 1, justifyContent: 'center'}}>
-                <View style={[styles.inputTextContainer, {borderBottomColor: hasFocus ? "#347AF0" : "#CFD2D8", backgroundColor: "#CFCFCF50"}]}>
+                <View style={[styles.inputTextContainer, {borderBottomColor: hasFocus ? "#347AF0" : "#CFD2D8"}]}>
                     <TextInput
                         multiline
                         textAlignVertical="top" 
@@ -45,7 +50,7 @@ const EnterMessage = ({route, navigation}:EnterRecipientProps) => {
             <View style={{flex: 2}}>
                 <Button title={titleize(i18n.t("review_payment"))} onPress={onReviewPayment} category="primary" />
             </View>
-        </View>
+        </LinearGradient>
     )
 };
 
@@ -54,7 +59,7 @@ const styles = StyleSheet.create({
         flex: 1, 
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 20
+        padding: 20,
     },
 
     inputTextContainer: {

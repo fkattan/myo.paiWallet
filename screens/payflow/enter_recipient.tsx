@@ -10,6 +10,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Button from '../../components/button';
 import i18n from 'i18n-js';
 import { titleize, capitalize } from "../../utils/text_helpers";
+import { usePayflowContext } from "./payflow_context";
+
+import * as Colors from '../../colors';
+import { LinearGradient } from "expo-linear-gradient";
 
 type EnterRecipientProps = {
     route:any,
@@ -18,27 +22,28 @@ type EnterRecipientProps = {
 
 const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
 
-    const [recipient, setRecipient] = useState<string>("");
+    const [recipientValue, setRecipientValue] = useState<string>("");
     const [disabled, setDisabled] = useState<boolean>(true);
     const [hasFocus, setFocus] = useState<boolean>(false);
 
+    const [payflowState, payflowDispatch] = usePayflowContext();
+    const { amount, recipient} = payflowState;
+
     useEffect(() => {
-        if(recipient && recipient.length > 0) {
-            if(ethers.utils.isAddress(recipient)) setDisabled(false);
+        if(recipient !== undefined) setRecipientValue(recipient);
+    }, [recipient])
+
+    useEffect(() => {
+        if(recipientValue && recipientValue.length > 0) {
+            if(ethers.utils.isAddress(recipientValue)) setDisabled(false);
         } else {
             setDisabled(true);
         }
-
-    }, [recipient]);
-
-    useEffect(() => {
-        if(route.params?.recipient) {
-            setRecipient(route.params.recipient);
-        };
-    },[route.params?.recipient])
+    }, [recipientValue]);
 
     const onEnterMessage = () => {
-        navigation.navigate("enter_message", {recipient, amount:route.params.amount});
+        payflowDispatch({type: 'set_recipient', payload: recipientValue})
+        navigation.navigate("enter_message");
     }
 
     const onQRScan = () => {
@@ -46,15 +51,15 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
     }
 
     return (
-        <View style={styles.container}>
+        <LinearGradient style={styles.container} colors={[Colors.LIGHT_GRAY, Colors.WHITE]} locations={[0, 0.5]}>
             <StatusBar barStyle="dark-content" />
             <View style={{flex: 0.25, justifyContent: 'flex-end'}}>
-                <Text style={styles.amountLegend}>{capitalize(i18n.t("amount_to_send"))}: {formatCurrency(route.params.amount, 2, {prefix: "$"})}</Text>
+                <Text style={styles.amountLegend}>{capitalize(i18n.t("amount_to_send"))}: {formatCurrency(amount || "0", 2, {prefix: "$"})}</Text>
             </View>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                 <View style={{flex: 1, justifyContent: 'center'}}>
                     <View style={[styles.inputTextContainer, {borderBottomColor: hasFocus ? "#347AF0" : "#CFD2D8"}]}>
-                        <TextInput multiline value={recipient} onChangeText={(text) => setRecipient(text)} style={styles.inputField} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} />
+                        <TextInput multiline value={recipientValue} onChangeText={(text) => setRecipientValue(text)} style={styles.inputField} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} />
                         <TouchableOpacity onPress={onQRScan}>
                             <MaterialCommunityIcons name="qrcode-scan" size={24} color="black" style={styles.inputIcon} />
                         </TouchableOpacity>
@@ -65,7 +70,7 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
             <View style={{flex: 2}}>
                 <Button title={titleize(i18n.t("continue"))} onPress={onEnterMessage} category="primary" disabled={disabled} />
             </View>
-        </View>
+        </LinearGradient>
     )
 };
 
@@ -74,7 +79,7 @@ const styles = StyleSheet.create({
         flex: 1, 
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 20
+        padding: 20,
     },
 
     inputTextContainer: {

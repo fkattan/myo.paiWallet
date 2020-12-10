@@ -1,7 +1,10 @@
 export const PRIMARY_BLUE="#347AF0";
 export const PRIMARY_BLUE_TRIADIC_DANGER="#F78EB5";
 export const PRIMARY_BLUE_TRIADIC_SUCCESS="#B5F78E";
+export const PRIMARY_BLUE_MONOCHROME="#115FE3";
+export const PRIMARY_BLUE_MONOCHROME_DARK="#1951DC";
 export const RED="#DF5060";
+export const RED_MONOCHROME = "#e63946";
 export const GREEN="#75BF72";
 export const DARK_GREEN="#3E963A";
 export const WHITE="#FFFFFF";
