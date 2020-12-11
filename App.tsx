@@ -1,7 +1,5 @@
 import 'react-native-gesture-handler';
 
-import "@ethersproject/shims"
-
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import {useFonts} from 'expo-font';

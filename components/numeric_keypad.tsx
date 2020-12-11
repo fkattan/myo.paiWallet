@@ -105,9 +105,9 @@ const styles = StyleSheet.create({
     },
 
     keyContainer: {
-        width: 72, 
-        height: 72, 
-        borderRadius: 36, 
+        width: 64, 
+        height: 64, 
+        borderRadius: 32, 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center', 

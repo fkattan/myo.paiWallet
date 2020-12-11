@@ -1,3 +1,4 @@
+import "@ethersproject/shims"
 import { ethers } from 'ethers';
 import React from 'react';
 

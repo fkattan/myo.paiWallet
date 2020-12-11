@@ -66,8 +66,10 @@ const Home = ({navigation}:HomeProps) => {
             });
             console.log("Got Decimals", new Date().getTime());
 
-            const wallet = ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
-            console.log("Got Wallet", new Date().getTime());
+            const signer = ethers.Wallet.fromMnemonic(mnemonic)
+            console.log("Got Signer", new Date().getTime());
+            const wallet = signer.connect(provider);
+            console.log("Got Wallet (Connected)", new Date().getTime());
             dispatch({type: 'set_wallet', payload: wallet});
             setInitialized(true);
         })
@@ -97,11 +99,12 @@ const Home = ({navigation}:HomeProps) => {
     }, [wallet, decimals]);
 
     useEffect(() => {
-        navigation.setOptions({headerStyle: {
-            backgroundColor: loading ? Colors.RED_MONOCHROME : Colors.PRIMARY_BLUE_MONOCHROME_DARK,
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0, 
+        navigation.setOptions({
+            headerStyle: {
+                backgroundColor: loading ? Colors.RED_MONOCHROME : Colors.PRIMARY_BLUE_MONOCHROME_DARK,
+                elevation: 0,
+                shadowOpacity: 0,
+                borderBottomWidth: 0, 
         }});
     }, [loading])
 

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import "@ethersproject/shims"
 import { ethers } from 'ethers';
 
 import { StatusBar, View, StyleSheet, Image, ActivityIndicator, Text} from 'react-native';

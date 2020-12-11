@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppContext } from '../app_context';
+
 import { View, Text } from 'react-native';
 import {Feather} from '@expo/vector-icons';
 import * as Colors from '../colors';
 
+import "@ethersproject/shims"
 import {ethers} from 'ethers';
 import {L2_PROVIDER_URL} from '../constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAppContext } from '../app_context';
+
 import { formatCurrency } from '../utils/currency_helpers';
 import { capitalize } from '../utils/text_helpers';
 

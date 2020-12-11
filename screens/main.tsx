@@ -19,7 +19,7 @@ const Main = () => {
     const { auth, wallet } = state;
 
     if(auth !== AuthState.success) {
-        return(
+        return (
             <Stack.Navigator initialRouteName="SignIn" headerMode="none">
                 <Stack.Screen
                     name="SignIn"
@@ -36,11 +36,6 @@ const Main = () => {
                 options={({navigation}) => ({
                     title: 'Peso Argentino Intangible',
                     headerTitleAlign: 'center',
-                    headerStyle: {
-                        elevation: 0,
-                        shadowOpacity: 0,
-                        borderBottomWidth: 0,
-                    },
                     headerTintColor: Colors.WHITE,
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"

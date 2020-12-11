@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import {ethers} from 'ethers';
 
 import { StyleSheet, View, Text, StatusBar } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
@@ -7,7 +6,7 @@ import { TextInput } from "react-native-gesture-handler";
 import Button from '../../components/button';
 import i18n from 'i18n-js';
 import { titleize } from "../../utils/text_helpers";
-import { usePayflowDispatch } from "./payflow_context";
+import { usePayflowContext } from "./payflow_context";
 
 import * as Colors from '../../colors';
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,7 +21,9 @@ const EnterMessage = ({route, navigation}:EnterRecipientProps) => {
     const [message, setMessage] = useState<string>("");
     const [hasFocus, setFocus] = useState<boolean>(false);
 
-    const payflowDispatch = usePayflowDispatch();
+    const [{memo}, payflowDispatch] = usePayflowContext()
+
+    useEffect(() => setMessage(memo || ""), []);
 
     const onReviewPayment = () => {
         payflowDispatch({type: 'set_memo', payload: message})

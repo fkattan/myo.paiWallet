@@ -1,35 +1,35 @@
 import React, { useEffect, useRef, useState } from "react";
-
-import { StyleSheet, View, Text, StatusBar, Animated } from "react-native";
-import { formatCurrency, toWei } from "../../utils/currency_helpers";
-
-import Button from '../../components/button';
-import { ethers } from "ethers";
-import { useAppState } from "../../app_context";
-
-import { L2_PAI_ADDRESS, L2_PROVIDER_URL } from "../../constants";
-import L2_PAI from '../../reference/L2_PAI.json';
-
-import eip712Sign from "../../utils/eip712_sign";
-
-import i18n from 'i18n-js';
-import {titleize, capitalize} from '../../utils/text_helpers';
-import { TransactionStatus, usePayflowContext } from "./payflow_context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 //@ts-ignore
 import ProgressBar from 'react-native-progress/Bar'; 
+import { LinearGradient } from "expo-linear-gradient";
+import Button from '../../components/button';
+import { StyleSheet, View, Text, StatusBar, Animated } from "react-native";
 
 import { FontAwesome } from '@expo/vector-icons'; 
+
+import { useAppState } from "../../app_context";
+import { TransactionStatus, usePayflowContext } from "./payflow_context";
+
+import { ethers } from "ethers";
+import { L2_PAI_ADDRESS } from "../../constants";
+import L2_PAI from '../../reference/L2_PAI.json';
+import eip712Sign from "../../utils/eip712_sign";
+
+import {titleize, capitalize} from '../../utils/text_helpers';
+import { formatCurrency, toWei } from "../../utils/currency_helpers";
+
 import  * as Colors from '../../colors';
-import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import i18n from 'i18n-js';
 
 type EnterRecipientProps = {
     route:any,
     navigation:any
 }
 
-const ReviewMessage = ({route, navigation}:EnterRecipientProps) => {
+const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
     const {wallet} = useAppState();
     const [payflowState, dispatch] = usePayflowContext();
@@ -104,6 +104,7 @@ const ReviewMessage = ({route, navigation}:EnterRecipientProps) => {
     }, [txStatus])
 
     // Execute Payment when TX Status is set to IN_PROGRESS
+    // Separate execution from button press, to get better UI performance
     useEffect(() => {
         if(txStatus === TransactionStatus.IN_PROGRESS) {
 
@@ -123,7 +124,6 @@ const ReviewMessage = ({route, navigation}:EnterRecipientProps) => {
         }
     },[txStatus])
 
-
     const onConfirmPayment = () => {
 
         if(!wallet || !amount || !recipient) {
@@ -139,9 +139,8 @@ const ReviewMessage = ({route, navigation}:EnterRecipientProps) => {
         setProgress(0.25);
 
         try {
-            const provider = wallet.provider; // new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
+            const provider = wallet.provider;
             const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, wallet);
-            // const walletProvider = wallet.connect(provider);
             setProgress(0.30);
 
             const signerAddress = await wallet.getAddress();
@@ -199,7 +198,7 @@ const ReviewMessage = ({route, navigation}:EnterRecipientProps) => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
             <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%'}}>
-                <LinearGradient locations={[0.10, 0.90]} colors={[Colors.PRIMARY_BLUE, Colors.PRIMARY_BLUE_MONOCHROME_DARK]} style={{flex:0.5, width: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                <LinearGradient locations={[0.10, 0.90]} colors={[Colors.PRIMARY_BLUE, Colors.PRIMARY_BLUE_MONOCHROME_DARK]} style={{flex:0.35, width: '100%', alignItems: 'center', justifyContent: 'center'}}>
                         <Button 
                             title={[TransactionStatus.SUCCESS, TransactionStatus.ERROR].indexOf(txStatus) !== -1 ? capitalize(i18n.t("back_to_wallet")) : capitalize(i18n.t("back"))} 
                             category="default" 

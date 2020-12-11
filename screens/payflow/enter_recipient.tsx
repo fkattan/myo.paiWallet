@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+
+import "@ethersproject/shims"
 import {ethers} from 'ethers';
 
 import { StyleSheet, View, Text, TouchableWithoutFeedback, Keyboard, StatusBar } from "react-native";

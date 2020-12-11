@@ -3,9 +3,12 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import {Feather} from '@expo/vector-icons';
 import * as Colors from '../colors';
 
+import "@ethersproject/shims"
 import {ethers} from 'ethers';
 import {L2_PROVIDER_URL} from '../constants';
+
 import TransferEventListItem from './transfer_event_list_item';
+
 import i18n from 'i18n-js';
 import {titleize} from '../utils/text_helpers';
 
