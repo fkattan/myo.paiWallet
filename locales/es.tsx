@@ -16,6 +16,8 @@ export default {
     success: "Pago Confirmado",
     error: "Pago No Realizado",
 
+    auth_prompt_message: "Ingresar para usar la billetera de PAI",
+
     scan_qr: "Scan QR",
     scan_qr_to_continue: "scan qr to para continuar",
 

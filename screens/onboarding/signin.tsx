@@ -3,6 +3,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 
 import { StatusBar, View, Text, StyleSheet, Pressable, Image} from 'react-native';
 import {useAppContext} from '../../app_context';
+
 import { capitalize } from '../../utils/text_helpers';
 import i18n from 'i18n-js';
 
@@ -24,7 +25,7 @@ const SignIn = () => {
 
     const handleSignIn = () => {
         LocalAuthentication.authenticateAsync({
-            promptMessage: "Authenticate to Use PAI Wallet"
+            promptMessage: i18n.t('auth_prompt_message')
         })
         .then((result:LocalAuthentication.LocalAuthenticationResult) => {
             if(result.success) {

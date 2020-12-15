@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-import { StyleSheet, View, Text, ActivityIndicator, StatusBar } from "react-native";
+import { StyleSheet, View, Text, StatusBar } from "react-native";
 import * as Colors from '../colors';
 import Button from '../components/button';
+//@ts-ignore
+import ProgressBar from 'react-native-progress/Bar'; 
 
 import * as SecureStore from 'expo-secure-store';
 
@@ -17,6 +19,8 @@ import { useAppContext } from "../app_context";
 import { formatCurrency } from "../utils/currency_helpers";
 import TransactionHistory from "../components/transaction_history";
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import i18n from 'i18n-js';
 
 import {titleize, capitalize} from '../utils/text_helpers';
@@ -29,94 +33,109 @@ type HomeProps = {
 const Home = ({navigation}:HomeProps) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [initialized, setInitialized] = useState<boolean>(false);
+    const [address, setAddress] = useState<string>();
 
     const [ state, dispatch ] = useAppContext();
     const { wallet, balance, decimals } = state;
 
+
     useEffect(() => {
 
-        console.log("Querying SecureStore", new Date().getTime());
+        // Try to recover Private Key from secure store; if it can't be recovered, 
+        // try to get mnemonic from secure store. If it can't generate a new mnemonic
+        // and use that to derive private key, signer, and wallet. 
+        const initializeWallet = async () => {
+
+            let pk = await SecureStore.getItemAsync("pai.privatekey");
+            if(pk === null) {
+                let mnemonic = await SecureStore.getItemAsync("pai.mnemonic");
+                if(mnemonic === null) mnemonic = await generateMnemonic();
+
+                const signer = ethers.Wallet.fromMnemonic(mnemonic);
+                pk = signer.privateKey;
+
+                SecureStore.setItemAsync("pai.privatekey", signer.privateKey)
+                .catch((reason:any) => { throw reason });
+
+                SecureStore.setItemAsync("pai.mnemonic", mnemonic)
+                .catch((reason:any) => { throw reason });
+            }
+
+            //@ts-ignore
+            const signer = new ethers.Wallet(pk);
+            const wallet = signer.connect(new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL));
+            dispatch({type: 'set_wallet', payload: wallet});
+
+            setInitialized(true);
+
+            return wallet;
+        };
 
         SecureStore.isAvailableAsync()
         .then(isSecureStoreAvailable => {
             if(!isSecureStoreAvailable) throw "SecureStore not available on Device";
-            console.log("Secure Store Available !!", new Date().getTime());
-        })
-        .then(async () => {
-
-            console.log("Querying Mnemonic", new Date().getTime());
-            let mnemonic = await SecureStore.getItemAsync(MNEMONIC_KEY);
-            if(mnemonic === null) {
-                mnemonic = await generateMnemonic();
-                await SecureStore.setItemAsync(MNEMONIC_KEY, mnemonic)
-                .catch((reason:any) => { throw reason });
-            }
-            console.log("Got Mnemonic", mnemonic, new Date().getTime());
-
-            const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-
-            console.log("Got Connected Wallet", new Date().getTime());
-
-            const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
-            console.log("Got PAI Contract (L2)", new Date().getTime());
-
-            pai.decimals()
-            .then((result:ethers.BigNumber) => {
-                dispatch({type: 'set_decimals', payload:result})
+            initializeWallet()
+            .then((wallet) => {
+                if(!address || wallet.address !== address) setAddress(wallet.address);
             });
-            console.log("Got Decimals", new Date().getTime());
+        })
 
-            const signer = ethers.Wallet.fromMnemonic(mnemonic)
-            console.log("Got Signer", new Date().getTime());
-            const wallet = signer.connect(provider);
-            console.log("Got Wallet (Connected)", new Date().getTime());
-            dispatch({type: 'set_wallet', payload: wallet});
-            setInitialized(true);
-        })
-        .catch(reason => {
-            console.error("Error: ", reason);
-        })
     }, []);
 
+
+    // Load last session's balance and decimals
+    // (to improve user's experience)
     useEffect(() => {
-        if(decimals === undefined || wallet === undefined) return; 
 
-        (async () => {
+        console.log("Trying to get Stored Balance", new Date().getTime());
+        AsyncStorage.getItem("pai.balance")
+        .then(value => {
+            if(value !== null) dispatch({type: "set_balance", payload: value})
+        })
 
-            const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, wallet);
-            const address = await wallet.getAddress()
-
-            setLoading(true);
-            pai.balanceOf(address)
-            .then((balance:ethers.BigNumber) => {
-                console.log("Got Balance");
-                dispatch({type: "set_balance", payload: ethers.utils.formatUnits(balance, decimals)});
+        if(!decimals) {
+            console.log("Trying to get Stored Decimals", new Date().getTime());
+            AsyncStorage.getItem("pai.decimals")
+            .then(value => {
+                if(value !== null) dispatch({type: "set_decimals", payload: ethers.BigNumber.from(value)});
             })
-            .catch((error:any) => { throw error })
-            .finally(() => setLoading(false));
+        }
+    }, [])
 
-        })();
-    }, [wallet, decimals]);
-
+    // When address becomes available
+    // Fetch latest balance and decimals from the network
     useEffect(() => {
-        navigation.setOptions({
-            headerStyle: {
-                backgroundColor: loading ? Colors.RED_MONOCHROME : Colors.PRIMARY_BLUE_MONOCHROME_DARK,
-                elevation: 0,
-                shadowOpacity: 0,
-                borderBottomWidth: 0, 
-        }});
-    }, [loading])
+        if(address === undefined) return; 
 
+        console.log("Address set to", address, new Date().getTime());
+        
+        const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
+        const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
 
-    if(loading || !initialized) return (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.RED_MONOCHROME}}>
-            <StatusBar hidden={true} />
-            <Text style={{fontSize: 24, fontWeight: 'bold', marginBottom: 24, fontFamily: "FugazOne", color: '#f1faee'}}>{i18n.t("loading").toUpperCase()}</Text>
-            <ActivityIndicator size="large" color="#f1faee" />
-        </View>
-    );
+        setLoading(true);
+        Promise.all([
+            pai.decimals()
+            .then((result:ethers.BigNumber) => dispatch({type: 'set_decimals', payload:result})),
 
+            pai.balanceOf(address)
+            .then((balance:ethers.BigNumber) => dispatch({type: "set_balance", payload: ethers.utils.formatUnits(balance, decimals)}))
+        ])
+        .catch((error:any) => { throw error })
+        .finally(() => setLoading(false));
+
+    }, [address])
+
+    // Store session's balance 
+    useEffect(() => {
+        balance && AsyncStorage.setItem("pai.balance", balance)
+    }, [balance])
+
+    // Store session's decimals
+    useEffect(() => {
+        decimals && AsyncStorage.setItem("pai.decimals", decimals.toString())
+    }, [decimals])
+
+ 
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content"/>
@@ -124,17 +143,22 @@ const Home = ({navigation}:HomeProps) => {
             <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                 <Text style={styles.label}>{titleize(i18n.t("your_balance"))}</Text>
                 <Text style={[styles.balance, {marginBottom: 40}]}>{formatCurrency(balance || "0", 2, {prefix: '$'})}</Text>
+                {loading ? (
+                    <ProgressBar progress={0} indeterminate={true} color={Colors.PRIMARY_BLUE_TRIADIC_DANGER} borderRadius={0} height={3} width={200} borderWidth={1} borderColor={Colors.PRIMARY_BLUE_MONOCHROME} />
+                ): (
+                    <ProgressBar progress={0} indeterminate={false} color={Colors.PRIMARY_BLUE} borderRadius={0} height={5} width={200} borderWidth={0} borderColor={Colors.PRIMARY_BLUE} />
+                )}
             </View>
         </LinearGradient>
 
         <View style={[{flex: 6}, styles.actionContainer]}>
             <View style={{flex: 1, flexDirection: 'row', alignItems: 'flex-start' }}>
                 <View style={{flex: 9}}>
-                    <Button category="default" title={capitalize(i18n.t("send"))} iconName="upload" onPress={() => navigation.navigate("payflow")} /> 
+                    <Button category="default" title={capitalize(i18n.t("send"))} iconName="upload" onPress={() => navigation.navigate("payflow")} disabled={loading || !initialized} /> 
                 </View>
                 <View style={{flex: 2}}><Text>&nbsp;</Text></View>
                 <View style={{flex: 9}}>
-                    <Button category="default" title={capitalize(i18n.t("receive"))} iconName="download" onPress={() => {navigation.navigate("account_info")}} /> 
+                    <Button category="default" title={capitalize(i18n.t("receive"))} iconName="download" onPress={() => {navigation.navigate("account_info")}} disabled={loading || !initialized}  /> 
                 </View>
             </View>
             <View style={[{flex: 3}, styles.transactionHistoryContainer]}>

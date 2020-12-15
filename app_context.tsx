@@ -1,4 +1,5 @@
 import "@ethersproject/shims"
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ethers } from 'ethers';
 import React from 'react';
 
@@ -48,10 +49,12 @@ function AppStateReducer(state:ApplicationState, action:AppAction):ApplicationSt
     }
 
     case 'set_balance': {
+      AsyncStorage.setItem("pai.balance", action.payload);
       return { ...state, balance: action.payload }
     }
 
     case 'set_decimals': {
+      AsyncStorage.setItem("pai.decimals", action.payload.toString());
       return { ...state, decimals: action.payload}
     }
 
@@ -81,16 +84,43 @@ const initialState:ApplicationState = {
   decimals: undefined,
 };
 
-function AppProvider({children, state}:AppStateProviderProps) {
-  const [appState, dispatch] = React.useReducer(AppStateReducer, state || initialState);
+const getInitialState = async () => {
+  const balance = await AsyncStorage.getItem("pai.balance");
+  const decimals = await AsyncStorage.getItem("pai.decimals");
 
-  return (
-    <ApplicationStateContext.Provider value={appState}>
-      <AppDispatchContext.Provider value={dispatch}>
-        {children}
-      </AppDispatchContext.Provider>
-    </ApplicationStateContext.Provider>
-  )
+  return {
+    auth: AuthState.undefined,
+    provider: undefined,
+    error: undefined, 
+    balance: balance || "0",
+    decimals: decimals ? ethers.BigNumber.from(decimals) : undefined
+  }
+}
+
+function AppProvider({children, state}:AppStateProviderProps) {
+
+    // let appState, dispatch;
+
+    // (async () => {
+    //   if(!state) {
+    //     await getInitialState()
+    //     .then(initialState => {
+    //       [appState, dispatch] = React.useReducer(AppStateReducer, initialState);
+    //     })
+    //   } else {
+    //       [appState, dispatch] = React.useReducer(AppStateReducer, state);
+    //   }
+    // })();
+
+    const [appState, dispatch] = React.useReducer(AppStateReducer, state || initialState);
+
+    return (
+      <ApplicationStateContext.Provider value={appState}>
+        <AppDispatchContext.Provider value={dispatch}>
+          {children}
+        </AppDispatchContext.Provider>
+      </ApplicationStateContext.Provider>
+    )
 }
 
 const useAppState = () => {
