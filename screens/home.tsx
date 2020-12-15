@@ -19,6 +19,8 @@ import { useAppContext } from "../app_context";
 import { formatCurrency } from "../utils/currency_helpers";
 import TransactionHistory from "../components/transaction_history";
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import i18n from 'i18n-js';
 
 import {titleize, capitalize} from '../utils/text_helpers';
