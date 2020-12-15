@@ -37,6 +37,12 @@ const Main = () => {
                     title: 'Peso Argentino Intangible',
                     headerTitleAlign: 'center',
                     headerTintColor: Colors.WHITE,
+                    headerStyle: {
+                        backgroundColor: Colors.PRIMARY_BLUE_MONOCHROME_DARK,
+                        elevation: 0,
+                        shadowOpacity: 0,
+                        borderBottomWidth: 0
+                    },
                     headerTitleStyle: {
                         fontFamily: "Montserrat-Bold"
                     }

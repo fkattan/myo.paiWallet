@@ -20,13 +20,14 @@ if(Platform.OS === 'android' ) {
 }
 
 i18n.translations = {
-  "en": { ...en },
-  "es": { ...es }
+  "en": en,
+  "es": es
 }
 
-i18n.locale = "es" //Localization.locale;
 i18n.fallbacks = true;
 
+// TODO: ONLY FOR DEBUG
+i18n.locale = "es" //Localization.locale;
 
 export default function App() {
 

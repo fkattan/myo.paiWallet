@@ -16,6 +16,8 @@ export default {
     success: "success",
     error: "error",
     
+    auth_prompt_message: "Authenticate to Use PAI Wallet",
+    
     scan_qr: "Scan QR",
     scan_qr_to_continue: "scan qr to continue",
     
