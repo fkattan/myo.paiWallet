@@ -12,14 +12,12 @@ import "@ethersproject/shims"
 import {ethers} from 'ethers';
 
 import PAI from '../reference/PAI.json';
-import {L2_PROVIDER_URL, MNEMONIC_KEY, L2_PAI_ADDRESS} from '../constants';
+import {L2_PROVIDER_URL, L2_PAI_ADDRESS} from '../constants';
 import generateMnemonic from '../utils/generate_mnemonic';
 
 import { useAppContext } from "../app_context";
 import { formatCurrency } from "../utils/currency_helpers";
 import TransactionHistory from "../components/transaction_history";
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import i18n from 'i18n-js';
 
@@ -42,7 +40,7 @@ const Home = ({navigation}:HomeProps) => {
     useEffect(() => {
 
         // Try to recover Private Key from secure store; if it can't be recovered, 
-        // try to get mnemonic from secure store. If it can't generate a new mnemonic
+        // try to get mnemonic from secure store, If it can't: generate a new mnemonic
         // and use that to derive private key, signer, and wallet. 
         const initializeWallet = async () => {
 
@@ -82,26 +80,6 @@ const Home = ({navigation}:HomeProps) => {
 
     }, []);
 
-
-    // Load last session's balance and decimals
-    // (to improve user's experience)
-    useEffect(() => {
-
-        console.log("Trying to get Stored Balance", new Date().getTime());
-        AsyncStorage.getItem("pai.balance")
-        .then(value => {
-            if(value !== null) dispatch({type: "set_balance", payload: value})
-        })
-
-        if(!decimals) {
-            console.log("Trying to get Stored Decimals", new Date().getTime());
-            AsyncStorage.getItem("pai.decimals")
-            .then(value => {
-                if(value !== null) dispatch({type: "set_decimals", payload: ethers.BigNumber.from(value)});
-            })
-        }
-    }, [])
-
     // When address becomes available
     // Fetch latest balance and decimals from the network
     useEffect(() => {
@@ -124,16 +102,6 @@ const Home = ({navigation}:HomeProps) => {
         .finally(() => setLoading(false));
 
     }, [address])
-
-    // Store session's balance 
-    useEffect(() => {
-        balance && AsyncStorage.setItem("pai.balance", balance)
-    }, [balance])
-
-    // Store session's decimals
-    useEffect(() => {
-        decimals && AsyncStorage.setItem("pai.decimals", decimals.toString())
-    }, [decimals])
 
  
     return (

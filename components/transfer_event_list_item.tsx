@@ -43,21 +43,24 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
 
         (async () => {
             const block:ethers.providers.Block = await provider.getBlock(log.blockNumber);
+            console.log("Block: ", block);
             setBlock(block);
 
             const item = await AsyncStorage.getItem(log.transactionHash);
             if(item !== null) {
-                const txLocalInfo = JSON.parse(item);
-                setDescription(txLocalInfo.description)
+                // const txLocalInfo = JSON.parse(item);
+                setDescription(item)
             }
         })();
 
-        const ABI = [ "event Transfer(address indexed from, address indexed to, uint256 value)" ];
+        console.log("TX History Event Item:", log);
+
+        // const ABI = [ "event Transfer(address indexed from, address indexed to, uint256 value)" ];
+        const ABI = [ "event Approval(address indexed owner, address indexed spender, uint256 value)" ];
         const iface = new ethers.utils.Interface(ABI);
         const event:ethers.utils.LogDescription = iface.parseLog(log);
         setDirection(event.args[1] === wallet?.address ? DirectionEnum.IN : DirectionEnum.OUT)
         setAmount(event.args[2]);
-
     }, []);
 
     useEffect(() => {
@@ -72,8 +75,18 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
             </View>
             <View style={{flex:4, flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start'}}>
                 <View style={{flex: 1, flexDirection: 'row'}}>
-                    <Text style={{flex: 1, fontSize: 14, ...textStyles}}>{txDate ? txDate.getDay() : '--'} {txDate ? MONTHS_3LETTER[txDate.getMonth()-1] : '--'}, {txDate ? txDate.getFullYear().toString() : "--"}</Text>
-                    <Text style={{flex: 2, textAlign: 'right', fontFamily: 'Montserrat-Bold', ...textStyles}}>
+                    <Text style={{flex: 6, fontSize: 14, ...textStyles}}>
+                        {txDate ? (
+                            txDate.getDate() + " " +
+                            MONTHS_3LETTER[txDate.getMonth()] + " " +
+                            txDate.getFullYear().toString() + " " + 
+                            txDate.getHours() + ":" +
+                            txDate.getMinutes().toString().padStart(2,'0')
+                        ) : (
+                            "--"
+                        )}
+                    </Text>
+                    <Text style={{flex: 5, textAlign: 'right', fontFamily: 'Montserrat-Bold', ...textStyles}}>
                         {amount ? formatCurrency(ethers.utils.formatUnits(amount, decimals || 18), 2, {prefix: "$"}) : "--"}
                     </Text>
                 </View>

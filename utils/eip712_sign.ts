@@ -1,4 +1,5 @@
 import { ethers } from "ethers";
+import { TypedDataDomain, TypedDataTypes } from "ethers-eip712";
 import { _TypedDataEncoder } from "ethers/lib/utils";
 import { L2_PAI_ADDRESS, L2_PROVIDER_URL } from "../constants";
 
@@ -13,10 +14,7 @@ const eip712Sign = async (
 ) => {
   if (wallet === undefined) return undefined;
 
-  // const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-  // const walletProvider = wallet.connect(provider);
-
-  const domain = {
+  const domain: TypedDataDomain = {
     name: "Peso Argentino Intangible",
     version: "1",
     chainId,

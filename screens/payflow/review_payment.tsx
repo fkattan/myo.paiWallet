@@ -121,7 +121,9 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
     // Store Memo field locally associated with this tx's hash
     useEffect(() => {
+        console.log("TxStatus Changed: ", txStatus);
         if(txStatus === TransactionStatus.SUCCESS && receipt !== undefined && memo !== undefined) {
+            console.log("Storing Description Locally", receipt.transactionHash, memo);
             AsyncStorage.setItem(receipt.transactionHash, memo);
         }
     },[txStatus])
@@ -150,7 +152,8 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
             const {timestamp} = await provider.getBlock(await provider.getBlockNumber());
             const nonce = await wallet.getTransactionCount();
             const metaNonce = await pai.nonces(signerAddress);
-            const deadline:string = ((timestamp + 1000) * 1000).toString();
+            // TX valid for 60 seconds. if it's not sent before that it will be expired. 
+            const deadline:string = ((timestamp + 60)).toString();
             const weiAmount = toWei(amount)
             setProgress(0.40);
 

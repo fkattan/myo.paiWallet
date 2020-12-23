@@ -6,7 +6,7 @@ import Button from '../../components/button';
 import NumericKeypad from "../../components/numeric_keypad";
 import { formatCurrency } from "../../utils/currency_helpers";
 
-import { useAppContext } from "../../app_context";
+import { useAppState } from "../../app_context";
 import { ethers } from "ethers";
 
 import i18n from 'i18n-js';
@@ -26,13 +26,10 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
     const [overdraft, setOverdraft] = useState<boolean>(false);
     const [isZero, setZero] = useState<boolean>(true);
 
-    const handleChangeAmount = (value:string) => setAmount(value);
-
-    const [state] = useAppContext();
-    const {balance, decimals} = state;
-
+    const {balance, decimals} = useAppState();
     const payflowDispatch = usePayflowDispatch();
 
+    const handleChangeAmount = (value:string) => setAmount(value);
 
     useEffect(() => {
         if(balance.length === 0) return; 
@@ -42,7 +39,6 @@ const EnterAmount = ({navigation}:EnterAmountProps) => {
 
         setOverdraft(amountBn.gt(balanceBn) ? true : false);
         setZero(amountBn.eq(ethers.BigNumber.from("0")) ? true : false);
-        console.log("isZero: ", isZero, amountBn.toString());
 
     }, [amount]);
 

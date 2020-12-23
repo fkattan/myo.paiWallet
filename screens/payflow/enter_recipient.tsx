@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 
 import "@ethersproject/shims"
 import {ethers} from 'ethers';
 
-import { StyleSheet, View, Text, TouchableWithoutFeedback, Keyboard, StatusBar } from "react-native";
-import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
+import { StyleSheet, View, Text, TouchableWithoutFeedback, Keyboard, StatusBar, Image } from "react-native";
+import { FlatList, TextInput, TouchableOpacity } from "react-native-gesture-handler";
+import * as Contacts from 'expo-contacts';
+
 import { formatCurrency } from "../../utils/currency_helpers";
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -28,8 +30,21 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
     const [disabled, setDisabled] = useState<boolean>(true);
     const [hasFocus, setFocus] = useState<boolean>(false);
 
+    const [useContactsGranted, setUseContactsGranted] = useState<boolean>(false);
+    const [contacts, setContacts] = useState<Contacts.ContactResponse>();
+    const [recipientName, setRecipientName] = useState<string>("")
+
     const [payflowState, payflowDispatch] = usePayflowContext();
     const { amount, recipient} = payflowState;
+
+    useEffect(() => {
+        Contacts.requestPermissionsAsync()
+        .then((response:Contacts.PermissionResponse) => {
+            if(response.status === Contacts.PermissionStatus.GRANTED) {
+               setUseContactsGranted(true); 
+            }
+        })
+    }, []);
 
     useEffect(() => {
         if(recipient !== undefined) setRecipientValue(recipient);
@@ -43,6 +58,22 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
         }
     }, [recipientValue]);
 
+    useEffect(() => {
+        if(!useContactsGranted || recipientName.length < 3) return;
+
+        Contacts.getContactsAsync({
+            name: recipientName,
+            fields: [Contacts.Fields.Name, Contacts.Fields.PhoneNumbers, Contacts.Fields.ImageAvailable, Contacts.Fields.Image]
+        })
+        .then((value:Contacts.ContactResponse) => {
+            if(value.data.length > 0) {
+                setContacts(value);
+            }
+        })
+    }, [recipientName])
+
+
+
     const onEnterMessage = () => {
         payflowDispatch({type: 'set_recipient', payload: recipientValue})
         navigation.navigate("enter_message");
@@ -50,6 +81,18 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
 
     const onQRScan = () => {
         navigation.navigate("scan")
+    }
+
+    const renderContact = ({contact}:{contact:Contacts.Contact}):ReactNode => {
+        if(!contact || !contact.phoneNumbers) return null;
+
+        return(
+            <TouchableOpacity>
+                {contact.imageAvailable && contact.image && (<Image source={contact.image} style={{width: 64, height: 64, borderRadius: 32}} />)}
+                <Text>{contact.name}</Text>
+                {contact.phoneNumbers && (<Text>{contact.phoneNumbers[0].label} {contact.phoneNumbers[0].number}</Text>)}
+            </TouchableOpacity>
+        );
     }
 
     return (
@@ -68,6 +111,16 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
                     </View>
                 </View>
             </TouchableWithoutFeedback>
+
+            {contacts && (
+                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                    <FlatList
+                        horizontal={true}
+                        data={contacts.data}
+                        renderItem={renderContact}
+                        />
+                </View>
+            )}
 
             <View style={{flex: 2}}>
                 <Button title={titleize(i18n.t("continue"))} onPress={onEnterMessage} category="primary" disabled={disabled} />
