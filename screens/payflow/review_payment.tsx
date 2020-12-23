@@ -154,10 +154,11 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
             const weiAmount = toWei(amount)
             setProgress(0.40);
 
-            const rsvSignature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
+            // const rsvSignature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
+            const signature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
             setProgress(0.50);
 
-            if(rsvSignature === undefined) {
+            if(signature === undefined) {
                 console.log("Something went wrong; rsvSignature undefined");
                 return;
             }
@@ -175,9 +176,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                     recipient,
                     wei: weiAmount,
                     deadline, 
-                    r: rsvSignature.r,
-                    s: rsvSignature.s,
-                    v: rsvSignature.v
+                    signature
                 })
             });
 
