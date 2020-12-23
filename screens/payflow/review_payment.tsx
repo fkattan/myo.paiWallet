@@ -29,6 +29,8 @@ type EnterRecipientProps = {
     navigation:any
 }
 
+const RELAYER_URL =  "http://192.168.7.73:3001";
+
 const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
     const {wallet} = useAppState();
@@ -161,24 +163,53 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
             }
 
             // TODO: Send to relayer.
-            const tx = await pai.permit(signerAddress, recipient, weiAmount, deadline, rsvSignature.v, rsvSignature.r, rsvSignature.s, {nonce, gasLimit: 90000, gasPrice: 2000000000})
-            .then(async (response:ethers.providers.TransactionResponse) => {
 
-                setProgress(0.75);
-                provider.waitForTransaction(response.hash)
-                .then((receipt:ethers.providers.TransactionReceipt) => {
-                    if(receipt.status !== 1) {
-                        // Reverted
-                        dispatch({type: 'error', error: `Reverted [status:${receipt.status}] hash: ${receipt.transactionHash}`});
-                        transitionToError();
-                    } else {
-                        setProgress(1);
-                        transitionToSuccess();
-                        dispatch({type: 'set_tx_receipt', payload: receipt});
-                    }
-                });
-            })
-            .catch((error:any) => console.log(error))
+            const response = await fetch(RELAYER_URL, {
+                method: 'POST',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    signerAddress, 
+                    recipient,
+                    wei: weiAmount,
+                    deadline, 
+                    r: rsvSignature.r,
+                    s: rsvSignature.s,
+                    v: rsvSignature.v
+                })
+            });
+
+            if(response.ok) {
+                setProgress(1);
+                transitionToSuccess();
+                // TODO: Set payflow state with appropiate response
+                // dispatch({type: 'set_tx_receipt', payload: response});
+            } else {
+                dispatch({type: 'error', error: `Reverted [status:${response.status}]`});
+                transitionToError();
+            }
+
+
+            // const tx = await pai.permit(signerAddress, recipient, weiAmount, deadline, rsvSignature.v, rsvSignature.r, rsvSignature.s, {nonce, gasLimit: 90000, gasPrice: 2000000000})
+            // .then(async (response:ethers.providers.TransactionResponse) => {
+
+            //     setProgress(0.75);
+            //     provider.waitForTransaction(response.hash)
+            //     .then((receipt:ethers.providers.TransactionReceipt) => {
+            //         if(receipt.status !== 1) {
+            //             // Reverted
+            //             dispatch({type: 'error', error: `Reverted [status:${receipt.status}] hash: ${receipt.transactionHash}`});
+            //             transitionToError();
+            //         } else {
+            //             setProgress(1);
+            //             transitionToSuccess();
+            //             dispatch({type: 'set_tx_receipt', payload: receipt});
+            //         }
+            //     });
+            // })
+            // .catch((error:any) => console.log(error))
 
         } catch(e) {
             console.error(e);

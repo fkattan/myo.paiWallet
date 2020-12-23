@@ -24,7 +24,7 @@ i18n.translations = {
   "es": { ...es }
 }
 
-i18n.locale = "es" //Localization.locale;
+i18n.locale = Localization.locale;
 i18n.fallbacks = true;
 
 
