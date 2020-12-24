@@ -17,7 +17,6 @@
     "@react-navigation/stack": "^5.9.3",
     "@types/i18n-js": "^3.0.3",
     "ethers": "5.0.24",
-    "ethers-eip712": "^0.2.0",
     "expo": "~39.0.2",
     "expo-barcode-scanner": "~9.0.0",
     "expo-crypto": "~8.3.0",
@@ -42,7 +41,6 @@
     "react-native-web": "~0.13.12"
   },
   "devDependencies": {
-    "@typechain/truffle-v5": "^2.0.2",
     "@types/react": "~16.9.35",
     "@types/react-dom": "~16.9.8",
     "@types/react-native": "~0.63.2",
