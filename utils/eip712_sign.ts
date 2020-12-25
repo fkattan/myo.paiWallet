@@ -51,9 +51,12 @@ const eip712Sign = async (
   );
 
   const signature = await wallet._signTypedData(domain, types, values);
-  const rsvSignature = ethers.utils.splitSignature(signature);
 
-  return rsvSignature;
+  console.log("Signature: ", signature);
+  return signature;
+
+  // const rsvSignature = ethers.utils.splitSignature(signature);
+  // return rsvSignature;
 };
 
 export default eip712Sign;
