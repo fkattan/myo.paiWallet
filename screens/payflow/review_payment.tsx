@@ -165,6 +165,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
             // TODO: Send to relayer.
 
+            console.log("Sending Request to relayer");
             const response = await fetch(RELAYER_URL, {
                 method: 'POST',
                 cache: 'no-cache',
@@ -179,6 +180,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                     signature
                 })
             });
+            console.log("Relayer Response", response);
 
             if(response.ok) {
                 setProgress(1);
