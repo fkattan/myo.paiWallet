@@ -1,15 +1,15 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactElement, ReactNode, useEffect, useState } from "react";
 
 import "@ethersproject/shims"
 import {ethers} from 'ethers';
 
-import { StyleSheet, View, Text, TouchableWithoutFeedback, Keyboard, StatusBar, Image } from "react-native";
-import { FlatList, TextInput, TouchableOpacity } from "react-native-gesture-handler";
+import { StyleSheet, View, Text, TouchableWithoutFeedback, Keyboard, StatusBar, Image, FlatList, TextInput, TouchableOpacity, ListRenderItem, ListRenderItemInfo } from "react-native";
 import * as Contacts from 'expo-contacts';
 
 import { formatCurrency } from "../../utils/currency_helpers";
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 import Button from '../../components/button';
 import i18n from 'i18n-js';
@@ -24,6 +24,11 @@ type EnterRecipientProps = {
     navigation:any
 }
 
+// Upon entry, show empty recipient input; scan icon, 
+// a contact-search box, and a list of contacts sort by last transfer date.
+// User can select from list, search a contact, or scan a QR. 
+
+
 const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
 
     const [recipientValue, setRecipientValue] = useState<string>("");
@@ -33,6 +38,8 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
     const [useContactsGranted, setUseContactsGranted] = useState<boolean>(false);
     const [contacts, setContacts] = useState<Contacts.ContactResponse>();
     const [recipientName, setRecipientName] = useState<string>("")
+
+    const [searchQuery, setSearchQuery] = useState<string>("");
 
     const [payflowState, payflowDispatch] = usePayflowContext();
     const { amount, recipient} = payflowState;
@@ -47,31 +54,43 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
     }, []);
 
     useEffect(() => {
-        if(recipient !== undefined) setRecipientValue(recipient);
+        if(recipient === undefined)  return;
+
+        setRecipientValue(recipient);
+        setSearchQuery(recipient);
+
     }, [recipient])
 
     useEffect(() => {
         if(recipientValue && recipientValue.length > 0) {
-            if(ethers.utils.isAddress(recipientValue)) setDisabled(false);
+            if(ethers.utils.isAddress(recipientValue)) {
+                setDisabled(false);
+            } else {
+                console.log("Setting search query", recipientValue);
+                setSearchQuery(recipientValue);
+            }
         } else {
             setDisabled(true);
         }
     }, [recipientValue]);
 
     useEffect(() => {
-        if(!useContactsGranted || recipientName.length < 3) return;
+        if(!useContactsGranted) return;
+        if(searchQuery.length >=3) {
+            console.log("Searching Contacts", searchQuery);
 
-        Contacts.getContactsAsync({
-            name: recipientName,
-            fields: [Contacts.Fields.Name, Contacts.Fields.PhoneNumbers, Contacts.Fields.ImageAvailable, Contacts.Fields.Image]
-        })
-        .then((value:Contacts.ContactResponse) => {
-            if(value.data.length > 0) {
+            Contacts.getContactsAsync({
+                name: searchQuery,
+                fields: [Contacts.Fields.Name, Contacts.Fields.PhoneNumbers, Contacts.Fields.ImageAvailable, Contacts.Fields.Image]
+            })
+            .then((value:Contacts.ContactResponse) => {
                 setContacts(value);
-            }
-        })
-    }, [recipientName])
+            })
+        } else {
+            setContacts(undefined);
+        }
 
+    }, [searchQuery])
 
 
     const onEnterMessage = () => {
@@ -83,14 +102,21 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
         navigation.navigate("scan")
     }
 
-    const renderContact = ({contact}:{contact:Contacts.Contact}):ReactNode => {
-        if(!contact || !contact.phoneNumbers) return null;
+    const renderContact:ListRenderItem<Contacts.Contact> = ({item}):ReactElement => {
+        console.log(item);
+        if(!item || !item.phoneNumbers) return (<View/>);
 
+        console.log("Not Null !!!!")
         return(
-            <TouchableOpacity>
-                {contact.imageAvailable && contact.image && (<Image source={contact.image} style={{width: 64, height: 64, borderRadius: 32}} />)}
-                <Text>{contact.name}</Text>
-                {contact.phoneNumbers && (<Text>{contact.phoneNumbers[0].label} {contact.phoneNumbers[0].number}</Text>)}
+            <TouchableOpacity style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', marginHorizontal: 10}}>
+                {item.imageAvailable && item.image ? (
+                    <Image source={item.image} style={{width: 64, height: 64, borderRadius: 32}} />
+                ):(
+                    <View style={{display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.LIGHT_GRAY, width: 64, height: 64, borderRadius: 32}}>
+                        <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
+                    </View>
+                )}
+                <Text style={{marginTop: 8, width: 84, textAlign: 'center'}}>{item.name}</Text>
             </TouchableOpacity>
         );
     }
@@ -98,22 +124,24 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
     return (
         <LinearGradient style={styles.container} colors={[Colors.LIGHT_GRAY, Colors.WHITE]} locations={[0, 0.5]}>
             <StatusBar barStyle="dark-content" />
-            <View style={{flex: 0.25, justifyContent: 'flex-end'}}>
+            <View style={{flex: 0.25, justifyContent: 'flex-end', alignItems: 'center', width: '100%'}}>
                 <Text style={styles.amountLegend}>{capitalize(i18n.t("amount_to_send"))}: {formatCurrency(amount || "0", 2, {prefix: "$"})}</Text>
             </View>
+
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                 <View style={{flex: 1, justifyContent: 'center'}}>
                     <View style={[styles.inputTextContainer, {borderBottomColor: hasFocus ? "#347AF0" : "#CFD2D8"}]}>
-                        <TextInput multiline value={recipientValue} onChangeText={(text) => setRecipientValue(text)} style={styles.inputField} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} />
+                        <TextInput multiline value={recipientValue} onChangeText={(text:string) => setRecipientValue(text)} style={styles.inputField} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} />
                         <TouchableOpacity onPress={onQRScan}>
                             <MaterialCommunityIcons name="qrcode-scan" size={24} color="black" style={styles.inputIcon} />
                         </TouchableOpacity>
                     </View>
                 </View>
+
             </TouchableWithoutFeedback>
 
             {contacts && (
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                <View style={{flex: 0.75, justifyContent: 'flex-start', alignItems: 'center'}}>
                     <FlatList
                         horizontal={true}
                         data={contacts.data}
@@ -121,6 +149,7 @@ const EnterRecipient = ({route, navigation}:EnterRecipientProps) => {
                         />
                 </View>
             )}
+
 
             <View style={{flex: 2}}>
                 <Button title={titleize(i18n.t("continue"))} onPress={onEnterMessage} category="primary" disabled={disabled} />
