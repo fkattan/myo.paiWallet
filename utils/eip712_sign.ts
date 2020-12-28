@@ -45,10 +45,12 @@ const eip712Sign = async (
   console.log("Types:", types);
   console.log("Values:", values);
 
+  /** 
   console.log(
     "Hash",
     ethers.utils._TypedDataEncoder.encode(domain, types, values)
   );
+  **/
 
   const signature = await wallet._signTypedData(domain, types, values);
 

@@ -29,7 +29,7 @@ type EnterRecipientProps = {
     navigation:any
 }
 
-const RELAYER_URL =  "http://192.168.7.73:3001";
+const RELAYER_URL =  "http://192.168.1.48:3001";
 
 const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
