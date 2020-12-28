@@ -9,10 +9,6 @@ import EnterMessage from './enter_message';
 import ReviewPayment from './review_payment';
 import ScanScreen from '../scan_qr';
 
-import PendingPaymentScreen from './pending_payment';
-import SuccessPaymentScreen from './success_payment';
-import ErrorPaymentScreen from './error_payment';
-
 import { PayflowProvider } from './payflow_context';
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import * as Colors  from '../../colors';
@@ -113,24 +109,6 @@ const Index = ({navigation: rootNavigation}:PayflowIndexProps) => {
                         headerBackTitle: capitalize(i18n.t("back")),
                         headerRight: () => null
                     })} />
-
-                <Stack.Screen
-                    name="pending_payment"
-                    component={PendingPaymentScreen} 
-                    options={() => DefaultHeaderOptions('#efefefef', '#000')}
-                />
-
-                <Stack.Screen
-                    name="success_payment"
-                    component={SuccessPaymentScreen} 
-                    options={() => DefaultHeaderOptions('#efefefef', '#000')}
-                />
-
-                <Stack.Screen
-                    name="error_payment"
-                    component={ErrorPaymentScreen} 
-                    options={() => DefaultHeaderOptions('#efefefef', '#000')}
-                />
 
             </Stack.Navigator>
         </PayflowProvider>
