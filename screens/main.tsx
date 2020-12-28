@@ -1,16 +1,17 @@
 import React from 'react';
-
-import { createStackNavigator } from '@react-navigation/stack';
+import i18n from 'i18n-js';
 
 import HomeScreen from './home';
 import PayflowEntry from './payflow/index';
-
 import AccountInfo from './account_info';
-
+import ErrorScreen from './error_screen';
 import SignIn from './onboarding/signin';
+
 import { AuthState, useAppState, AppErrorCodes } from '../app_context';
+
 import  * as Colors from '../colors';
-import DeviceNotElegible from './onboarding/device_not_elegible';
+
+import { createStackNavigator } from '@react-navigation/stack';
 
 const Stack = createStackNavigator();
 
@@ -18,8 +19,17 @@ const Main = () => {
 
     const { auth, error } = useAppState();
 
-    if(error !== undefined && error.code === AppErrorCodes.device_not_elegible) {
-        return (<DeviceNotElegible />);
+    if(error !== undefined) {
+        switch (error.code) {
+            case AppErrorCodes.device_not_elegible:
+                return (<ErrorScreen message={i18n.t("device_not_available")} image={require("../assets/error.png")} />)
+
+            case AppErrorCodes.biometric_auth_user_not_enrolled:
+                return (<ErrorScreen message={i18n.t("biometric_auth_user_not_enrolled")} image={require('../assets/error.png')} />)
+            
+            default: 
+                return (<ErrorScreen message={i18n.t("app_error")} image={require('../assets/error.png')} />)
+        }
     }
 
     if(auth !== AuthState.success) {

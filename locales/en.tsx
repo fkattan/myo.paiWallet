@@ -17,6 +17,8 @@ export default {
     error: "error",
     
     device_not_elegible: "Your device is not compatible with PAI",
+    enroll_biometric_authentication: "This app requires biometric authentication; please setup your phone's biometric authentication hardware",
+    app_error: "Ugh, Oh, it seems that something unespected happened, this app can't start",
     auth_prompt_message: "Authenticate to Use PAI Wallet",
     
     scan_qr: "Scan QR",

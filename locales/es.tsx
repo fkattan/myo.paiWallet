@@ -17,6 +17,8 @@ export default {
     error: "Pago No Realizado",
 
     device_not_elegible: "Este dispositivo no es compatible con PAI",
+    enroll_biometric_authentication: "Por favor configure su telefono para aceptar autenticacion biometrica (huella dactilar, o FaceID)",
+    app_error: "Lo sentimos; un error no esperado a ocurrido; PAI no puede comenzar",
     auth_prompt_message: "Ingresar para usar la billetera de PAI",
 
     scan_qr: "Scan QR",
