@@ -16,6 +16,7 @@ export default {
     success: "success",
     error: "error",
     
+    device_not_elegible: "Your device is not compatible with PAI",
     auth_prompt_message: "Authenticate to Use PAI Wallet",
     
     scan_qr: "Scan QR",

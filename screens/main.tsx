@@ -8,15 +8,19 @@ import PayflowEntry from './payflow/index';
 import AccountInfo from './account_info';
 
 import SignIn from './onboarding/signin';
-import { AuthState, useAppContext } from '../app_context';
+import { AuthState, useAppState, AppErrorCodes } from '../app_context';
 import  * as Colors from '../colors';
+import DeviceNotElegible from './onboarding/device_not_elegible';
 
 const Stack = createStackNavigator();
 
 const Main = () => {
 
-    const [ state, dispatch ] = useAppContext()
-    const { auth, wallet } = state;
+    const { auth, error } = useAppState();
+
+    if(error !== undefined && error.code === AppErrorCodes.device_not_elegible) {
+        return (<DeviceNotElegible />);
+    }
 
     if(auth !== AuthState.success) {
         return (
@@ -27,7 +31,7 @@ const Main = () => {
             </Stack.Navigator>
         )
     }
-
+    
     return (
         <Stack.Navigator initialRouteName="home">
             <Stack.Screen

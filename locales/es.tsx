@@ -16,6 +16,7 @@ export default {
     success: "Pago Confirmado",
     error: "Pago No Realizado",
 
+    device_not_elegible: "Este dispositivo no es compatible con PAI",
     auth_prompt_message: "Ingresar para usar la billetera de PAI",
 
     scan_qr: "Scan QR",

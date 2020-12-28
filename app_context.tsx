@@ -9,13 +9,24 @@ export enum AuthState {
   'undefined'
 };
 
+export enum AppErrorCodes {
+  'device_not_elegible',
+  'biometric_auth_user_not_enrolled',
+  'network_not_available',
+};
+
+export type AppError = {
+  code: AppErrorCodes,
+  description: string
+};
+
 export type ApplicationState = {
   auth: AuthState | undefined,
   provider: ethers.providers.JsonRpcProvider | undefined,
   wallet?: ethers.Wallet | undefined,
   balance: string,
   decimals: ethers.BigNumber | undefined,
-  error: string | undefined,
+  error: AppError | undefined,
 };
 
 type AppAction = 
@@ -25,7 +36,7 @@ type AppAction =
   {type: 'set_balance', payload:string}  |
   {type: 'set_provider', payload: ethers.providers.JsonRpcProvider} |
   {type: 'set_wallet', payload: ethers.Wallet} |
-  {type:'error', error: string|undefined};
+  {type:'error', error: AppError | undefined};
 
 type Dispatch = (action: AppAction) => void;
 
@@ -49,12 +60,10 @@ function AppStateReducer(state:ApplicationState, action:AppAction):ApplicationSt
     }
 
     case 'set_balance': {
-      AsyncStorage.setItem("pai.balance", action.payload);
       return { ...state, balance: action.payload }
     }
 
     case 'set_decimals': {
-      AsyncStorage.setItem("pai.decimals", action.payload.toString());
       return { ...state, decimals: action.payload}
     }
 
@@ -98,19 +107,6 @@ const getInitialState = async () => {
 }
 
 function AppProvider({children, state}:AppStateProviderProps) {
-
-    // let appState, dispatch;
-
-    // (async () => {
-    //   if(!state) {
-    //     await getInitialState()
-    //     .then(initialState => {
-    //       [appState, dispatch] = React.useReducer(AppStateReducer, initialState);
-    //     })
-    //   } else {
-    //       [appState, dispatch] = React.useReducer(AppStateReducer, state);
-    //   }
-    // })();
 
     const [appState, dispatch] = React.useReducer(AppStateReducer, state || initialState);
 
