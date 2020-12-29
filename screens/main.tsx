@@ -22,7 +22,7 @@ const Main = () => {
     if(error !== undefined) {
         switch (error.code) {
             case AppErrorCodes.device_not_elegible:
-                return (<ErrorScreen message={i18n.t("device_not_available")} image={require("../assets/error.png")} />)
+                return (<ErrorScreen message={i18n.t("device_not_elegible")} image={require("../assets/error.png")} />)
 
             case AppErrorCodes.biometric_auth_user_not_enrolled:
                 return (<ErrorScreen message={i18n.t("biometric_auth_user_not_enrolled")} image={require('../assets/error.png')} />)
@@ -41,6 +41,7 @@ const Main = () => {
             </Stack.Navigator>
         )
     }
+
     
     return (
         <Stack.Navigator initialRouteName="home">
