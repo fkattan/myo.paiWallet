@@ -9,28 +9,32 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Colors from '../colors';
 
 type OnboardingErrorProps = {
-    message:string
-    image:ImageSourcePropType
+    message:string,
+    description:string,
+    image:ImageSourcePropType,
+    bgColor?:string
 }
 
-const OnboardingError = ({message, image}:OnboardingErrorProps) => {
+const OnboardingError = ({message, description, image, bgColor}:OnboardingErrorProps) => {
 
     return (
-        <LinearGradient colors={[Colors.WHITE, Colors.LIGHT_GRAY]} locations={[0.6,0.9]} style={{flex:9, alignItems: 'center', justifyContent: 'center', width: '100%'}}>
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', backgroundColor: bgColor || Colors.MIDNIGHT_BLUE}}>
             <StatusBar hidden={true} />
             <SafeAreaView style={styles.container}>
-                <View style={{flex: 1}}>
-                    <Text style={styles.title}>Myo.Finance</Text>
+
+                <View style={{flex: 1, justifyContent: 'center'}}>
+                    <Text style={styles.brand}>Myo.Finance</Text>
                     <Text style={styles.subTitle}>Peso Argentino Intangible</Text>
                 </View>
 
-                <Image source={image} style={{resizeMode: 'contain', width: "100%"}} /> 
+                <Image source={image} style={{flex: 1, resizeMode: 'contain', marginVertical: 40}} /> 
 
-                <View style={{flex: 1}}>
+                <View style={{flex: 2}}>
                     <Text style={[styles.message, {marginHorizontal: 20}]}>{message}</Text>
+                    <Text style={[styles.description, {marginHorizontal: 20}]}>{description}</Text>
                 </View>
             </SafeAreaView>
-        </LinearGradient>
+        </View>
     );
 }
 

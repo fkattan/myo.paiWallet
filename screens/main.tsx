@@ -22,13 +22,13 @@ const Main = () => {
     if(error !== undefined) {
         switch (error.code) {
             case AppErrorCodes.device_not_elegible:
-                return (<ErrorScreen message={i18n.t("device_not_elegible")} image={require("../assets/error.png")} />)
+                return (<ErrorScreen message={i18n.t("device_not_elegible")} description={i18n.t("device_not_elegible_description")} image={require("../assets/error.png")} bgColor={Colors.RED}/>)
 
             case AppErrorCodes.biometric_auth_user_not_enrolled:
-                return (<ErrorScreen message={i18n.t("biometric_auth_user_not_enrolled")} image={require('../assets/error.png')} />)
+                return (<ErrorScreen message={i18n.t("biometric_auth_user_not_enrolled")} description={i18n.t("biometric_auth_user_not_enrolled_description")} image={require('../assets/error.png')} bgColor={Colors.DARK_GREEN} />)
             
             default: 
-                return (<ErrorScreen message={i18n.t("app_error")} image={require('../assets/error.png')} />)
+                return (<ErrorScreen message={i18n.t("app_error")} description={i18n.t("app_error_description")} image={require('../assets/error.png')} />)
         }
     }
 
@@ -42,7 +42,6 @@ const Main = () => {
         )
     }
 
-    
     return (
         <Stack.Navigator initialRouteName="home">
             <Stack.Screen

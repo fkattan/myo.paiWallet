@@ -1,5 +1,7 @@
 import {StyleSheet} from 'react-native';
 
+import * as Colors from './colors';
+
 export default StyleSheet.create({
     container: {
         flex:1,
@@ -10,32 +12,36 @@ export default StyleSheet.create({
     },
 
     brand: {
-        fontFamily: "Montserrat-Bold",
-        fontSize: 16
-    },
-
-    title: {
-        color: "#0D1F3C",
+        color: Colors.WHITE,
         fontFamily: 'FugazOne',
         textAlign: 'center',
         fontWeight: 'bold',
-        fontSize: 36,
+        fontSize: 32,
         marginBottom: 5,
     },
 
     subTitle: {
-        color: '#78839C',
+        color: Colors.OFF_WHITE,
         textAlign: 'center',
         fontWeight: 'bold',
-        fontSize: 20,
+        fontSize: 18,
         marginBottom: 18,
     },
 
     message: {
         fontFamily: 'Montserrat-Bold',
-        textAlign: 'center',
+        color: Colors.WHITE,
         fontSize: 20,
         lineHeight: 32,
-        marginBottom: 20
+        textAlign: 'center',
+    },
+
+    description: {
+        fontFamily: 'Montserrat',
+        color: Colors.WHITE,
+        fontSize: 16,
+        lineHeight: 26,
+        textAlign: 'center',
+        marginTop: 20
     }
 })
