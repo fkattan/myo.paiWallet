@@ -48,5 +48,7 @@ export default {
     no_network: "no network",
     payment_error: "ah ocurrido un error, el pago no fue procesado",
 
-    your_payment_has_been_processed: "el pago ha sido procesado"
+    your_payment_has_been_processed: "el pago ha sido procesado", 
+
+    confirm_mobile_number: "confirmar número"
 }

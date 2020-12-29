@@ -32,6 +32,10 @@ const AccountInfo = ({navigation}:AccountInfoProps) => {
         })();
     }, [wallet])
 
+    const onVerifyNumber = () => {
+        alert('will display verification window')
+    }
+
     const onCopy = () => {
         Clipboard.setString(accountAddress);
     }
@@ -62,10 +66,13 @@ const AccountInfo = ({navigation}:AccountInfoProps) => {
 
             <View style={{flex:1}}>
 
-                <View style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    <Text style={{fontFamily: 'FugazOne', fontSize: 18}}>{titleize(i18n.t("account_address"))}</Text>
-                    <Text style={{fontFamily: 'Montserrat-Bold', fontSize: 18}}>{shortenAddress(accountAddress || "").toLowerCase() || titleize(i18n.t("no_network"))}</Text>
-                </View>
+                <View style={{display: 'flex', flexDirection: 'row'}}>
+                <TouchableOpacity onPress={onVerifyNumber} style={[styles.buttonContainer, {marginTop:20}]}>
+                        <Text style={[styles.buttonText, {marginHorizontal: 18}]}>&nbsp;</Text>
+                        <Feather name="smartphone" size={18} color='#347AF0'/>
+                        <Text style={[styles.buttonText, {marginLeft: 8}]}>{capitalize(i18n.t("confirm_mobile_number"))}</Text>
+                 </TouchableOpacity>
+                 </View>
 
                 <View style={{display: 'flex', flexDirection: 'row'}}>
                     <TouchableOpacity onPress={onCopy} style={[styles.buttonContainer, {marginTop:40}]}>

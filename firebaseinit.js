@@ -10,14 +10,14 @@ function init() {
 
   // Initialize Firebase
   const firebaseConfig = {
-    apiKey: "AIzaSyCM2fYZ7Nrf8b5rqfjrzg2MGhK23qi8-tM",
-    authDomain: "myo-backend.firebaseapp.com",
-    databaseURL: "https://myo-backend.firebaseio.com",
-    projectId: "myo-backend",
-    storageBucket: "myo-backend.appspot.com",
-    messagingSenderId: "925526893460",
-    appId: "1:925526893460:web:d562a61a4defb13cfb2581",
-    //measurementId: "G-measurement-id",
+    apiKey: "AIzaSyAaq9nz-qlMq13yn_E8ku5e3dSd7jjkLEQ",
+    authDomain: "myo-backend-55739.firebaseapp.com",
+    databaseURL: "https://myo-backend-55739-default-rtdb.firebaseio.com/",
+    projectId: "myo-backend-55739",
+    storageBucket: "myo-backend-55739.appspot.com",
+    messagingSenderId: "285056394352",
+    appId: "1:285056394352:web:d87e09109b821bd66800b5",
+    measurementId: "G-3BHYH83Q31",
   };
 
   firebase.initializeApp(firebaseConfig);
