@@ -50,5 +50,5 @@ export default {
 
     your_payment_has_been_processed: "el pago ha sido procesado", 
 
-    confirm_mobile_number: "confirmar número"
+    confirm_mobile_number: "confirmar número de móvil"
 }

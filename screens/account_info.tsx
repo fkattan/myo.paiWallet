@@ -65,14 +65,10 @@ const AccountInfo = ({navigation}:AccountInfoProps) => {
             </View>
 
             <View style={{flex:1}}>
-
-                <View style={{display: 'flex', flexDirection: 'row'}}>
-                <TouchableOpacity onPress={onVerifyNumber} style={[styles.buttonContainer, {marginTop:20}]}>
-                        <Text style={[styles.buttonText, {marginHorizontal: 18}]}>&nbsp;</Text>
-                        <Feather name="smartphone" size={18} color='#347AF0'/>
-                        <Text style={[styles.buttonText, {marginLeft: 8}]}>{capitalize(i18n.t("confirm_mobile_number"))}</Text>
-                 </TouchableOpacity>
-                 </View>
+                <TouchableOpacity onPress={onVerifyNumber} style={[{display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}]}>
+		            <Feather name="smartphone" size={18} color='#347AF0'/>
+                    <Text style={[styles.buttonText, {marginLeft: 8}]}>{capitalize(i18n.t("confirm_mobile_number"))}</Text>
+            	</TouchableOpacity>
 
                 <View style={{display: 'flex', flexDirection: 'row'}}>
                     <TouchableOpacity onPress={onCopy} style={[styles.buttonContainer, {marginTop:40}]}>
