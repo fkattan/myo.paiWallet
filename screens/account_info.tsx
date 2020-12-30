@@ -100,7 +100,14 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
           </Text>
         </TouchableOpacity>
 
-        <View style={{ display: "flex", flexDirection: "row" }}>
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <TouchableOpacity
             onPress={onCopy}
             style={[styles.buttonContainer, { marginTop: 40 }]}
