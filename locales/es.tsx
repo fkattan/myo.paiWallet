@@ -51,5 +51,6 @@ export default {
   your_payment_has_been_processed: "el pago ha sido procesado",
 
   confirm_mobile_number: "confirmar número de móvil",
+  clear_mobile_number: "eliminar número de móvil",
   invalid_mobile_number: "numero de celular invalido",
 };

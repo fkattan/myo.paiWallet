@@ -35,7 +35,7 @@ const PhoneVerifier = ({
     const checkValid = phoneInput.current?.isValidNumber(value);
     setValid(checkValid ? checkValid : false);
     setShowWarning(checkValid ? false : true);
-    console.log("IS valid: ", checkValid);
+    checkValid && onConfirm(formattedValue);
   };
   return (
     <Modal

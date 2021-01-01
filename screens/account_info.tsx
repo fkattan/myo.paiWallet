@@ -7,19 +7,22 @@ import {
   StatusBar,
   Share,
   Clipboard,
-  Modal,
-  TouchableHighlight,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
+import { color } from "react-native-reanimated";
 
 import { useAppContext } from "../app_context";
 import { capitalize, titleize } from "../utils/text_helpers";
 import i18n from "i18n-js";
 import * as Colors from "../colors";
 import PhoneVerifier from "../components/phone_verifier";
+import {
+  storePhoneMapping,
+  removePhoneMapping,
+} from "../services/data_service";
 
 type AccountInfoProps = {
   navigation: any;
@@ -29,7 +32,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
   const [accountAddress, setAccountAddress] = useState<string>("");
   const [showVerifyNumber, setShowVerifyNumber] = useState<boolean>(false);
   const [state, dispatch] = useAppContext();
-  const { wallet } = state;
+  const { wallet, phoneNumber } = state;
 
   useEffect(() => {
     if (wallet === undefined) return;
@@ -39,6 +42,8 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
     })();
   }, [wallet]);
 
+  useEffect(() => {}, [phoneNumber]);
+
   const onCopy = () => {
     Clipboard.setString(accountAddress);
   };
@@ -47,6 +52,17 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
     const result = await Share.share({
       message: accountAddress,
     });
+  };
+
+  const onConfirmedPhoneNumber = (phoneNumber: string) => {
+    storePhoneMapping(phoneNumber, accountAddress);
+    dispatch({ type: "set_phone_number", payload: phoneNumber });
+    setShowVerifyNumber(false);
+  };
+
+  const onRemovePhoneNumber = () => {
+    removePhoneMapping(phone);
+    dispatch({ type: "set_phone_number", payload: undefined });
   };
 
   if (accountAddress === undefined) {
@@ -72,33 +88,63 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
           <QRCode value={`ethereum:${accountAddress}`} size={240} />
         </View>
       </View>
+      {phoneNumber && <Text>phone number is verified..{phoneNumber}</Text>}
 
       <PhoneVerifier
         show={showVerifyNumber}
         onCancel={(event) => {
           setShowVerifyNumber(false);
         }}
-        onConfirm={(phoneNumber) => {}}
+        onConfirm={(pn) => onConfirmedPhoneNumber(pn)}
       />
       <View style={{ flex: 1 }}>
-        <TouchableOpacity
-          onPress={() => {
-            setShowVerifyNumber(true);
-          }}
-          style={[
-            {
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-            },
-          ]}
-        >
-          <Feather name="smartphone" size={18} color="#347AF0" />
-          <Text style={[styles.buttonText, { marginLeft: 8 }]}>
-            {capitalize(i18n.t("confirm_mobile_number"))}
-          </Text>
-        </TouchableOpacity>
+        {phoneNumber ? (
+          <TouchableOpacity
+            onPress={onRemovePhoneNumber}
+            style={[
+              {
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              },
+            ]}
+          >
+            <Feather
+              name="smartphone"
+              size={18}
+              color={Colors.RED_MONOCHROME}
+            />
+            <Text
+              style={[
+                styles.buttonText,
+                { marginLeft: 8 },
+                { color: Colors.RED_MONOCHROME },
+              ]}
+            >
+              {capitalize(i18n.t("clear_mobile_number"))}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() => {
+              setShowVerifyNumber(true);
+            }}
+            style={[
+              {
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              },
+            ]}
+          >
+            <Feather name="smartphone" size={18} color="#347AF0" />
+            <Text style={[styles.buttonText, { marginLeft: 8 }]}>
+              {capitalize(i18n.t("confirm_mobile_number"))}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         <View
           style={{
