@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   GestureResponderEvent,
   Modal,
@@ -14,17 +15,17 @@ import PhoneInput from "react-native-phone-number-input";
 import * as Localization from "expo-localization";
 import i18n from "i18n-js";
 
-type PhoneVerifierProps = {
+type PersonalDataCollectorProps = {
   onCancel: (event: GestureResponderEvent) => void;
   onConfirm: (phone: string) => void;
   show?: boolean;
 };
 
-const PhoneVerifier = ({
+const PersonalDataCollector = ({
   onCancel,
   onConfirm,
   show = false,
-}: PhoneVerifierProps) => {
+}: PersonalDataCollectorProps) => {
   const [value, setValue] = useState("");
   const [formattedValue, setFormattedValue] = useState("");
   const [valid, setValid] = useState(false);
@@ -53,6 +54,7 @@ const PhoneVerifier = ({
           </Text>
         </View>
         <View style={{ flex: 2 }}>
+          <TextInput></TextInput>
           <PhoneInput
             ref={phoneInput}
             defaultValue={value}

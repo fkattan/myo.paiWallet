@@ -9,14 +9,27 @@ export enum AuthState {
   "undefined",
 }
 
+export enum AppErrorCodes {
+  "device_not_elegible",
+  "biometric_auth_user_not_enrolled",
+  "network_not_available",
+}
+
+export type AppError = {
+  code: AppErrorCodes;
+  description: string;
+};
+
 export type ApplicationState = {
   auth: AuthState | undefined;
   provider: ethers.providers.JsonRpcProvider | undefined;
   wallet?: ethers.Wallet | undefined;
   balance: string;
-  phoneNumber?: string | undefined;
+  phoneNumber: string | undefined;
+  firstName: string | undefined;
+  lastName: string | undefined;
   decimals: ethers.BigNumber | undefined;
-  error: string | undefined;
+  error: AppError | undefined;
 };
 
 type AppAction =
@@ -24,10 +37,13 @@ type AppAction =
   | { type: "auth_failure" }
   | { type: "set_decimals"; payload: ethers.BigNumber }
   | { type: "set_balance"; payload: string }
-  | { type: "set_phone_number"; payload: string }
+  | {
+      type: "set_user_details";
+      payload: { phoneNumber: string; firstName: string; lastName: string };
+    }
   | { type: "set_provider"; payload: ethers.providers.JsonRpcProvider }
   | { type: "set_wallet"; payload: ethers.Wallet }
-  | { type: "error"; error: string | undefined };
+  | { type: "error"; error: AppError | undefined };
 
 type Dispatch = (action: AppAction) => void;
 
@@ -55,15 +71,19 @@ function AppStateReducer(
     }
 
     case "set_balance": {
-      AsyncStorage.setItem("pai.balance", action.payload);
       return { ...state, balance: action.payload };
     }
-    case "set_phone_number": {
-      AsyncStorage.setItem("user.phone_number", action.payload);
-      return { ...state, phoneNumber: action.payload };
+
+    case "set_user_details": {
+      return {
+        ...state,
+        phoneNumber: action.payload.phoneNumber,
+        firstName: action.payload.firstName,
+        lastName: action.payload.lastName,
+      };
     }
+
     case "set_decimals": {
-      AsyncStorage.setItem("pai.decimals", action.payload.toString());
       return { ...state, decimals: action.payload };
     }
 
@@ -91,42 +111,33 @@ const initialState: ApplicationState = {
   error: undefined,
   balance: "0",
   phoneNumber: undefined,
+  firstName: undefined,
+  lastName: undefined,
   decimals: undefined,
 };
 
 const getInitialState = async () => {
-  console.log("\n\nGETINITIALSTATE CALLED");
-  const balance = await AsyncStorage.getItem("pai.balance");
+  console.log("GET INITIAL STATE Called");
   const phoneNumber = await AsyncStorage.getItem("user.phone_number");
-  const decimals = await AsyncStorage.getItem("pai.decimals");
+  const firstName = await AsyncStorage.getItem("user.first_name");
+  const lastName = await AsyncStorage.getItem("user.last_name");
 
   return {
     auth: AuthState.undefined,
     provider: undefined,
     error: undefined,
-    balance: balance || "0",
+    balance: "0",
     phoneNumber: phoneNumber || undefined,
-    decimals: decimals ? ethers.BigNumber.from(decimals) : undefined,
+    firstName: firstName || undefined,
+    lastName: lastName || undefined,
+    decimals: undefined,
   };
 };
 
 function AppProvider({ children, state }: AppStateProviderProps) {
-  // let appState, dispatch;
-
-  // (async () => {
-  //   if(!state) {
-  //     await getInitialState()
-  //     .then(initialState => {
-  //       [appState, dispatch] = React.useReducer(AppStateReducer, initialState);
-  //     })
-  //   } else {
-  //       [appState, dispatch] = React.useReducer(AppStateReducer, state);
-  //   }
-  // })();
-
   const [appState, dispatch] = React.useReducer(
     AppStateReducer,
-    state || initialState
+    state || getInitialState()
   );
 
   return (

@@ -18,7 +18,7 @@ import { useAppContext } from "../app_context";
 import { capitalize, titleize } from "../utils/text_helpers";
 import i18n from "i18n-js";
 import * as Colors from "../colors";
-import PhoneVerifier from "../components/phone_verifier";
+import PhoneVerifier from "../components/personal_data_collector";
 import {
   storePhoneMapping,
   removePhoneMapping,
