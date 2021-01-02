@@ -50,7 +50,9 @@ export default {
 
   your_payment_has_been_processed: "your payment has been processed",
 
-  confirm_mobile_number: "confirm mobile number",
-  clear_mobile_number: "clear mobile number",
-  invalid_mobile_number: "invalid mobile number",
+  first_name: "first name",
+  last_name: "last name",
+  enter_account_details: "enter account details",
+  clear_account_details: "clear account details ",
+  invalid_account_details: "all fields and a valid mobile number required",
 };

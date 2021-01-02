@@ -14,7 +14,7 @@ import es from "./locales/es";
 
 import { LogBox, Platform } from "react-native";
 
-import firebaseInit from "./firebaseinit";
+import { firebaseInit } from "./firebase_init";
 
 firebaseInit();
 

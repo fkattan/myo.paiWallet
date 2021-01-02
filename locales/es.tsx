@@ -50,7 +50,10 @@ export default {
 
   your_payment_has_been_processed: "el pago ha sido procesado",
 
-  confirm_mobile_number: "confirmar número de móvil",
-  clear_mobile_number: "eliminar número de móvil",
-  invalid_mobile_number: "numero de celular invalido",
+  first_name: "primer nombre",
+  last_name: "apellido",
+  enter_account_details: "ingrese los detalles de la cuenta",
+  clear_account_details: "eliminar los detalles de la cuenta",
+  invalid_account_details:
+    "todos los campos y un número de móvil válido son obligatorios",
 };

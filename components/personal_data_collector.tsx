@@ -17,7 +17,11 @@ import i18n from "i18n-js";
 
 type PersonalDataCollectorProps = {
   onCancel: (event: GestureResponderEvent) => void;
-  onConfirm: (phone: string) => void;
+  onConfirm: (data: {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+  }) => void;
   show?: boolean;
 };
 
@@ -31,12 +35,18 @@ const PersonalDataCollector = ({
   const [valid, setValid] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const phoneInput = useRef<PhoneInput>(null);
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
 
   const handleOnConfirm = (event: GestureResponderEvent) => {
-    const checkValid = phoneInput.current?.isValidNumber(value);
+    const checkValid =
+      phoneInput.current?.isValidNumber(value) &&
+      firstName.length > 0 &&
+      lastName.length > 0;
     setValid(checkValid ? checkValid : false);
-    setShowWarning(checkValid ? false : true);
-    checkValid && onConfirm(formattedValue);
+    setShowWarning(!checkValid);
+    checkValid &&
+      onConfirm({ firstName, lastName, phoneNumber: formattedValue });
   };
   return (
     <Modal
@@ -50,11 +60,23 @@ const PersonalDataCollector = ({
       <View style={styles.modal}>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>
-            {titleize(i18n.t("confirm_mobile_number"))}
+            {titleize(i18n.t("enter_account_details"))}
           </Text>
         </View>
-        <View style={{ flex: 2 }}>
-          <TextInput></TextInput>
+        <View style={{ flex: 3 }}>
+          <TextInput
+            style={styles.textInput}
+            placeholder={capitalize(i18n.t("first_name"))}
+            onChangeText={(text) => setFirstName(text)}
+            value={firstName}
+            autoFocus
+          />
+          <TextInput
+            style={styles.textInput}
+            placeholder={capitalize(i18n.t("last_name"))}
+            onChangeText={(text) => setLastName(text)}
+            value={lastName}
+          />
           <PhoneInput
             ref={phoneInput}
             defaultValue={value}
@@ -69,7 +91,6 @@ const PersonalDataCollector = ({
             }}
             withDarkTheme
             withShadow
-            autoFocus
           />
           <View
             style={{
@@ -82,7 +103,7 @@ const PersonalDataCollector = ({
           >
             {showWarning && (
               <Text style={styles.warning}>
-                {capitalize(i18n.t("invalid_mobile_number"))}
+                {capitalize(i18n.t("invalid_account_details"))}
               </Text>
             )}
           </View>
@@ -141,7 +162,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Montserrat-Bold",
     color: "#347AF0",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   modal: {
     flex: 1,
@@ -168,10 +189,28 @@ const styles = StyleSheet.create({
     fontFamily: "Montserrat-Bold",
     color: "#347AF0",
   },
+  textInput: {
+    marginBottom: 5,
+    fontSize: 16,
+    color: "#000000",
+    backgroundColor: "#F8F9F9",
+    height: 50,
+    padding: 5,
+    borderWidth: 1,
+    borderColor: Colors.LIGHT_GRAY,
+    shadowColor: "rgba(0,0,0,0.4)",
+    shadowOffset: {
+      width: 1,
+      height: 5,
+    },
+    shadowOpacity: 0.34,
+    shadowRadius: 6.27,
+    elevation: 10,
+  },
 
   warning: {
     color: Colors.RED_MONOCHROME,
   },
 });
 
-export default PhoneVerifier;
+export default PersonalDataCollector;

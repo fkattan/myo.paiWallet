@@ -1,5 +1,4 @@
 import "@ethersproject/shims";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ethers } from "ethers";
 import React from "react";
 
@@ -41,6 +40,7 @@ type AppAction =
       type: "set_user_details";
       payload: { phoneNumber: string; firstName: string; lastName: string };
     }
+  | { type: "clear_user_details"; payload: undefined }
   | { type: "set_provider"; payload: ethers.providers.JsonRpcProvider }
   | { type: "set_wallet"; payload: ethers.Wallet }
   | { type: "error"; error: AppError | undefined };
@@ -83,6 +83,15 @@ function AppStateReducer(
       };
     }
 
+    case "clear_user_details": {
+      return {
+        ...state,
+        phoneNumber: undefined,
+        firstName: undefined,
+        lastName: undefined,
+      };
+    }
+
     case "set_decimals": {
       return { ...state, decimals: action.payload };
     }
@@ -116,12 +125,9 @@ const initialState: ApplicationState = {
   decimals: undefined,
 };
 
+/** 
 const getInitialState = async () => {
-  console.log("GET INITIAL STATE Called");
-  const phoneNumber = await AsyncStorage.getItem("user.phone_number");
-  const firstName = await AsyncStorage.getItem("user.first_name");
-  const lastName = await AsyncStorage.getItem("user.last_name");
-
+  const { firstName, lastName, phoneNumber } = await readPersonalData();
   return {
     auth: AuthState.undefined,
     provider: undefined,
@@ -133,11 +139,12 @@ const getInitialState = async () => {
     decimals: undefined,
   };
 };
+**/
 
 function AppProvider({ children, state }: AppStateProviderProps) {
   const [appState, dispatch] = React.useReducer(
     AppStateReducer,
-    state || getInitialState()
+    state || initialState
   );
 
   return (

@@ -9,7 +9,7 @@ import {
   Clipboard,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 import { color } from "react-native-reanimated";
@@ -18,10 +18,11 @@ import { useAppContext } from "../app_context";
 import { capitalize, titleize } from "../utils/text_helpers";
 import i18n from "i18n-js";
 import * as Colors from "../colors";
-import PhoneVerifier from "../components/personal_data_collector";
+import PersonalDataCollector from "../components/personal_data_collector";
 import {
-  storePhoneMapping,
-  removePhoneMapping,
+  storePersonalData,
+  removePersonalData,
+  readPersonalData,
 } from "../services/data_service";
 
 type AccountInfoProps = {
@@ -30,9 +31,18 @@ type AccountInfoProps = {
 
 const AccountInfo = ({ navigation }: AccountInfoProps) => {
   const [accountAddress, setAccountAddress] = useState<string>("");
-  const [showVerifyNumber, setShowVerifyNumber] = useState<boolean>(false);
+  const [showDataCollector, setShowDataCollector] = useState<boolean>(false);
   const [state, dispatch] = useAppContext();
-  const { wallet, phoneNumber } = state;
+  const { wallet, firstName, lastName, phoneNumber } = state;
+
+  const loadPersonalData = async () => {
+    const data = await readPersonalData();
+    data.firstName && dispatch({ type: "set_user_details", payload: data });
+  };
+
+  useEffect(() => {
+    loadPersonalData();
+  }, []);
 
   useEffect(() => {
     if (wallet === undefined) return;
@@ -41,8 +51,6 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
       setAccountAddress(address);
     })();
   }, [wallet]);
-
-  useEffect(() => {}, [phoneNumber]);
 
   const onCopy = () => {
     Clipboard.setString(accountAddress);
@@ -54,15 +62,19 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
     });
   };
 
-  const onConfirmedPhoneNumber = (phoneNumber: string) => {
-    storePhoneMapping(phoneNumber, accountAddress);
-    dispatch({ type: "set_phone_number", payload: phoneNumber });
-    setShowVerifyNumber(false);
+  const onPersonalDataCollected = (data: {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+  }) => {
+    storePersonalData(data, accountAddress);
+    dispatch({ type: "set_user_details", payload: data });
+    setShowDataCollector(false);
   };
 
-  const onRemovePhoneNumber = () => {
-    removePhoneMapping(phone);
-    dispatch({ type: "set_phone_number", payload: undefined });
+  const onRemovePersonalData = () => {
+    removePersonalData(phoneNumber);
+    dispatch({ type: "clear_user_details", payload: undefined });
   };
 
   if (accountAddress === undefined) {
@@ -82,25 +94,28 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
       <StatusBar barStyle="dark-content" />
 
       <View style={{ flex: 2, alignItems: "center", justifyContent: "center" }}>
+        <Text style={styles.nameText}>
+          {firstName} {lastName}{" "}
+        </Text>
+        <Text style={styles.phoneText}>{phoneNumber}</Text>
         <View
           style={{ padding: 40, borderRadius: 20, backgroundColor: "#FFF" }}
         >
           <QRCode value={`ethereum:${accountAddress}`} size={240} />
         </View>
       </View>
-      {phoneNumber && <Text>phone number is verified..{phoneNumber}</Text>}
 
-      <PhoneVerifier
-        show={showVerifyNumber}
-        onCancel={(event) => {
-          setShowVerifyNumber(false);
+      <PersonalDataCollector
+        show={showDataCollector}
+        onCancel={() => {
+          setShowDataCollector(false);
         }}
-        onConfirm={(pn) => onConfirmedPhoneNumber(pn)}
+        onConfirm={(data) => onPersonalDataCollected(data)}
       />
       <View style={{ flex: 1 }}>
         {phoneNumber ? (
           <TouchableOpacity
-            onPress={onRemovePhoneNumber}
+            onPress={onRemovePersonalData}
             style={[
               {
                 display: "flex",
@@ -110,8 +125,8 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
               },
             ]}
           >
-            <Feather
-              name="smartphone"
+            <MaterialCommunityIcons
+              name="account-minus"
               size={18}
               color={Colors.RED_MONOCHROME}
             />
@@ -122,13 +137,13 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
                 { color: Colors.RED_MONOCHROME },
               ]}
             >
-              {capitalize(i18n.t("clear_mobile_number"))}
+              {capitalize(i18n.t("clear_account_details"))}
             </Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             onPress={() => {
-              setShowVerifyNumber(true);
+              setShowDataCollector(true);
             }}
             style={[
               {
@@ -139,9 +154,9 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
               },
             ]}
           >
-            <Feather name="smartphone" size={18} color="#347AF0" />
+            <MaterialCommunityIcons name="account" size={18} color="#347AF0" />
             <Text style={[styles.buttonText, { marginLeft: 8 }]}>
-              {capitalize(i18n.t("confirm_mobile_number"))}
+              {capitalize(i18n.t("enter_account_details"))}
             </Text>
           </TouchableOpacity>
         )}
@@ -247,6 +262,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Montserrat-Bold",
     color: "#347AF0",
+  },
+  nameText: {
+    fontSize: 18,
+    fontFamily: "Montserrat-Bold",
+    color: Colors.BLACK,
+  },
+  phoneText: {
+    marginBottom: 2,
+    fontSize: 16,
+    fontFamily: "Montserrat",
+    color: Colors.DARK_GRAY,
   },
 });
 

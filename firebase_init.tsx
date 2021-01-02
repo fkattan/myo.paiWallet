@@ -1,6 +1,6 @@
 import * as firebase from "firebase";
 
-function init() {
+export function firebaseInit() {
   // Optionally import the services that you want to use
   //import "firebase/auth";
   //import "firebase/database";
@@ -22,5 +22,3 @@ function init() {
 
   firebase.initializeApp(firebaseConfig);
 }
-
-module.exports = init;
