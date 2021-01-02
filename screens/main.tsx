@@ -1,22 +1,36 @@
 import React from 'react';
-
-import { createStackNavigator } from '@react-navigation/stack';
+import i18n from 'i18n-js';
 
 import HomeScreen from './home';
 import PayflowEntry from './payflow/index';
-
 import AccountInfo from './account_info';
-
+import ErrorScreen from './error_screen';
 import SignIn from './onboarding/signin';
-import { AuthState, useAppContext } from '../app_context';
+
+import { AuthState, useAppState, AppErrorCodes } from '../app_context';
+
 import  * as Colors from '../colors';
+
+import { createStackNavigator } from '@react-navigation/stack';
 
 const Stack = createStackNavigator();
 
 const Main = () => {
 
-    const [ state, dispatch ] = useAppContext()
-    const { auth, wallet } = state;
+    const { auth, error } = useAppState();
+
+    if(error !== undefined) {
+        switch (error.code) {
+            case AppErrorCodes.device_not_elegible:
+                return (<ErrorScreen message={i18n.t("device_not_elegible")} description={i18n.t("device_not_elegible_description")} image={require("../assets/error.png")} bgColor={Colors.RED}/>)
+
+            case AppErrorCodes.biometric_auth_user_not_enrolled:
+                return (<ErrorScreen message={i18n.t("biometric_auth_user_not_enrolled")} description={i18n.t("biometric_auth_user_not_enrolled_description")} image={require('../assets/error.png')} bgColor={Colors.DARK_GREEN} />)
+            
+            default: 
+                return (<ErrorScreen message={i18n.t("app_error")} description={i18n.t("app_error_description")} image={require('../assets/error.png')} />)
+        }
+    }
 
     if(auth !== AuthState.success) {
         return (

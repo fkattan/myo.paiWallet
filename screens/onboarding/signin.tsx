@@ -1,26 +1,43 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 
-import { StatusBar, View, Text, StyleSheet, Pressable, Image} from 'react-native';
-import {useAppContext} from '../../app_context';
+import { StatusBar, View, Text, StyleSheet, Pressable, Image, ActivityIndicator} from 'react-native';
+import {AppErrorCodes, useAppContext} from '../../app_context';
 
 import { capitalize } from '../../utils/text_helpers';
 import i18n from 'i18n-js';
 
+import * as Colors from '../../colors';
+
 const SignIn = () => {
 
     const [state, dispatch] = useAppContext();
+    const [ready, setReady] = useState<boolean>(false);
 
     useEffect(()=> {
         LocalAuthentication.hasHardwareAsync()
         .then((hasHardwareAuth:boolean) => {
-            if(!hasHardwareAuth) throw "No Hardware Auth";
+            if(!hasHardwareAuth) {
+                dispatch({type: "error", error: {code: AppErrorCodes.device_not_elegible, description: "No biometric authentication hardware on device"}})
+                return Promise.reject();
+            }
+        })
 
+        .then(() => {
             LocalAuthentication.isEnrolledAsync()
             .then((isEnrolled:boolean) => {
-                if(!isEnrolled) throw "Not Enrolled to Biometric Auth";
+                if(!isEnrolled) {
+                    dispatch({type: "error", error: {code: AppErrorCodes.biometric_auth_user_not_enrolled, description: "User not enrolled to use biometric auth"}});
+                    return Promise.reject();
+                }
+                setReady(true);
             });
+        })
+
+        .catch(() => {
+            setReady(false);
         });
+
     }, []);
 
     const handleSignIn = () => {
@@ -42,7 +59,6 @@ const SignIn = () => {
         </Pressable>
     );
 
-
     return (
         <View style={styles.container}>
             <StatusBar hidden={true} />
@@ -52,7 +68,7 @@ const SignIn = () => {
                 <Text style={styles.subTitle}>Peso Argentino Intangible</Text>
             </View>
             <View style={{marginBottom: 50}}>
-                <AuthButton />
+                {ready && (<AuthButton />)}
             </View>
         </View>
     );

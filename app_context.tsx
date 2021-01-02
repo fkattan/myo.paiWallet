@@ -9,14 +9,14 @@ export enum AuthState {
 }
 
 export enum AppErrorCodes {
-  "device_not_elegible",
-  "biometric_auth_user_not_enrolled",
-  "network_not_available",
-}
+  'device_not_elegible',
+  'biometric_auth_user_not_enrolled',
+  'network_not_available',
+};
 
 export type AppError = {
-  code: AppErrorCodes;
-  description: string;
+  code: AppErrorCodes,
+  description: string
 };
 
 export type ApplicationState = {
