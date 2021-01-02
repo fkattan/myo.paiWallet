@@ -14,6 +14,10 @@ import es from "./locales/es";
 
 import { LogBox, Platform } from "react-native";
 
+import { firebaseInit } from "./firebase_init";
+
+firebaseInit();
+
 // Ignore "setting a timer ..." warning on Android
 if (Platform.OS === "android") {
   LogBox.ignoreLogs(["Setting a timer"]);
