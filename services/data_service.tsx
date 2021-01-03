@@ -2,6 +2,7 @@ import * as firebase from "firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ethers } from "ethers";
+
 export const readPersonalData = async () => {
   const firstName = await AsyncStorage.getItem("user.first_name");
   const lastName = await AsyncStorage.getItem("user.last_name");
@@ -47,6 +48,8 @@ export const storePersonalData = (
  * @param phone phone number
  */
 export const removePersonalData = (phone: string | undefined): void => {
+  if(phone === undefined) return; 
+
   console.log("-->removePersonalData");
   const hashedPhone = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(phone));
   try {

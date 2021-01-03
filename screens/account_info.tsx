@@ -37,7 +37,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
 
   const loadPersonalData = async () => {
     const data = await readPersonalData();
-    data.firstName && dispatch({ type: "set_user_details", payload: data });
+    data.firstName && dispatch({ type: "set_user_details", payload: {firstName: data.firstName || "", lastName: data.lastName || "", phoneNumber: data.phoneNumber || ""} });
   };
 
   useEffect(() => {
