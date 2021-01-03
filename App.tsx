@@ -32,7 +32,7 @@ i18n.locale = Localization.locale;
 i18n.fallbacks = true;
 
 // TODO: ONLY FOR DEBUG
-i18n.locale = "es" // Localization.locale;
+i18n.locale = Localization.locale;
 
 export default function App() {
   const [fontsLoaded] = useFonts({
