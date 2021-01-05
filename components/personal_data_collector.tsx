@@ -7,6 +7,12 @@ import {
   GestureResponderEvent,
   Modal,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Image,
+  Dimensions,
+  SafeAreaView,
+  ScrollView,
+  Platform
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import * as Colors from "../colors";
@@ -37,6 +43,7 @@ const PersonalDataCollector = ({
   const phoneInput = useRef<PhoneInput>(null);
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
+  const [inputFocus, setInputFocus] = React.useState<string>("")
 
   const handleOnConfirm = (event: GestureResponderEvent) => {
     const checkValid =
@@ -51,103 +58,117 @@ const PersonalDataCollector = ({
   return (
     <Modal
       animationType={"slide"}
+      presentationStyle="fullScreen"
       transparent={false}
       visible={show}
-      onRequestClose={() => {
-        console.log("Modal has been closed.");
-      }}
     >
-      <View style={styles.modal}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>
-            {titleize(i18n.t("enter_account_details"))}
-          </Text>
-        </View>
-        <View style={{ flex: 3 }}>
-          <TextInput
-            style={styles.textInput}
-            placeholder={capitalize(i18n.t("first_name"))}
-            onChangeText={(text) => setFirstName(text)}
-            value={firstName}
-            autoFocus
-          />
-          <TextInput
-            style={styles.textInput}
-            placeholder={capitalize(i18n.t("last_name"))}
-            onChangeText={(text) => setLastName(text)}
-            value={lastName}
-          />
-          <PhoneInput
-            ref={phoneInput}
-            defaultValue={value}
-            defaultCode={Localization.locale.split("-")[1]}
-            layout="first"
-            onChangeText={(text) => {
-              setShowWarning(false);
-              setValue(text);
-            }}
-            onChangeFormattedText={(text) => {
-              setFormattedValue(text);
-            }}
-            withDarkTheme
-            withShadow
-          />
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingTop: 10,
-            }}
-          >
-            {showWarning && (
-              <Text style={styles.warning}>
-                {capitalize(i18n.t("invalid_account_details"))}
-              </Text>
-            )}
-          </View>
+      <SafeAreaView style={styles.modal}>
+        <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? "padding": "height"}>
 
-          <View
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <TouchableOpacity
-              onPress={(e) => {
-                handleOnConfirm(e);
-              }}
-              style={[styles.buttonContainer, { marginTop: 40 }]}
-            >
-              <AntDesign name="check" size={18} color="#347AF0" />
-              <Text style={styles.button}>{capitalize(i18n.t("confirm"))}</Text>
-            </TouchableOpacity>
+          <ScrollView contentContainerStyle={{flexGrow: 1, width: Dimensions.get("screen").width}} keyboardShouldPersistTaps="handled">
 
-            <TouchableOpacity
-              onPress={(e) => {
-                onCancel(e);
-              }}
-              style={[styles.buttonContainer, { marginTop: 40 }]}
-            >
-              <Text style={[styles.button, { marginHorizontal: 18 }]}>
-                &nbsp;
+            <View style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'flex-start' }}>
+              <Text style={styles.title}>
+                {titleize(i18n.t("enter_account_details"))}
               </Text>
-              <AntDesign name="close" size={18} color={Colors.RED_MONOCHROME} />
-              <Text
-                style={[
-                  styles.button,
-                  { marginLeft: 8, color: Colors.RED_MONOCHROME },
-                ]}
+            </View>
+
+            <Image source={require('../assets/office.png')} resizeMode="contain" style={{ flex: 1, height: undefined, width: undefined}} />
+
+            <View style={{ flex: 1, paddingHorizontal: 30, paddingTop:20, marginHorizontal: 10, backgroundColor: Colors.WHITE, borderTopLeftRadius:8, borderTopRightRadius:8 }}>
+              <TextInput
+                style={[styles.textInput, inputFocus === "first_name" && styles.textInputActive]}
+                placeholder={capitalize(i18n.t("first_name"))}
+                onChangeText={(text) => setFirstName(text)}
+                onFocus={() => setInputFocus("first_name")}
+                onBlur={() => setInputFocus("phone")}
+                value={firstName}
+                autoFocus
+              />
+              <TextInput
+                style={[styles.textInput, inputFocus === "last_name" && styles.textInputActive]}
+                placeholder={capitalize(i18n.t("last_name"))}
+                onChangeText={(text) => setLastName(text)}
+                onFocus={() => setInputFocus("last_name")}
+                onBlur={() => setInputFocus("phone")}
+                value={lastName}
+              />
+              <PhoneInput
+                ref={phoneInput}
+                defaultValue={value}
+                defaultCode={Localization.locale.split("-")[1]}
+                layout="first"
+                onChangeText={(text) => {
+                  setShowWarning(false);
+                  setValue(text);
+                }}
+                onChangeFormattedText={(text) => {
+                  setFormattedValue(text);
+                }}
+                placeholder={i18n.t("phone_number")}
+                withDarkTheme
+                withShadow={false}
+                containerStyle={{width: '100%', marginTop: 10, backgroundColor: Colors.WHITE, borderBottomWidth: 1, borderBottomColor: inputFocus === "phone" ? Colors.PRIMARY_BLUE : Colors.LIGHT_GRAY}}
+                textContainerStyle={{backgroundColor: Colors.WHITE}}
+              />
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingTop: 10,
+                }}
               >
-                {capitalize(i18n.t("cancel"))}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+                {showWarning && (
+                  <Text style={styles.warning}>
+                    {capitalize(i18n.t("invalid_account_details"))}
+                  </Text>
+                )}
+              </View>
+
+              <View
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <TouchableOpacity
+                  onPress={(e) => {
+                    handleOnConfirm(e);
+                  }}
+                  style={[styles.buttonContainer, { marginTop: 40 }]}
+                >
+                  <AntDesign name="check" size={18} color="#347AF0" />
+                  <Text style={styles.button}>{capitalize(i18n.t("confirm"))}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={(e) => {
+                    onCancel(e);
+                  }}
+                  style={[styles.buttonContainer, { marginTop: 40 }]}
+                >
+                  <Text style={[styles.button, { marginHorizontal: 18 }]}>
+                    &nbsp;
+                  </Text>
+                  <AntDesign name="close" size={18} color={Colors.RED_MONOCHROME} />
+                  <Text
+                    style={[
+                      styles.button,
+                      { marginLeft: 8, color: Colors.RED_MONOCHROME },
+                    ]}
+                  >
+                    {capitalize(i18n.t("cancel"))}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 };
@@ -168,10 +189,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     backgroundColor: Colors.OFF_WHITE,
-    paddingTop: 50,
-    paddingRight: 5,
-    paddingBottom: 30,
-    paddingLeft: 5,
   },
   modalText: {
     color: "#3f2949",
@@ -183,29 +200,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   button: {
     marginLeft: 8,
     fontSize: 18,
     fontFamily: "Montserrat-Bold",
-    color: "#347AF0",
+    color: Colors.PRIMARY_BLUE,
   },
+
   textInput: {
-    marginBottom: 5,
-    fontSize: 16,
-    color: "#000000",
-    backgroundColor: "#F8F9F9",
+    marginBottom: 20,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.BLACK,
     height: 50,
     padding: 5,
-    borderWidth: 1,
+    borderWidth: 0,
+    borderBottomWidth: 1,
     borderColor: Colors.LIGHT_GRAY,
-    shadowColor: "rgba(0,0,0,0.4)",
-    shadowOffset: {
-      width: 1,
-      height: 5,
-    },
-    shadowOpacity: 0.34,
-    shadowRadius: 6.27,
-    elevation: 10,
+    elevation: 0,
+  },
+
+  textInputActive: {
+    borderBottomColor: Colors.PRIMARY_BLUE,
   },
 
   warning: {

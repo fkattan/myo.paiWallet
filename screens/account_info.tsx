@@ -12,10 +12,9 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
-import { color } from "react-native-reanimated";
 
 import { useAppContext } from "../app_context";
-import { capitalize, titleize } from "../utils/text_helpers";
+import { capitalize } from "../utils/text_helpers";
 import i18n from "i18n-js";
 import * as Colors from "../colors";
 import PersonalDataCollector from "../components/personal_data_collector";
