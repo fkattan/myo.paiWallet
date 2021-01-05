@@ -15,20 +15,20 @@ import {
   TextInput,
   TouchableOpacity,
   ListRenderItem,
-  ListRenderItemInfo,
 } from "react-native";
 import * as Contacts from "expo-contacts";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 
 import { getPotentialFullNumbers } from "../../utils/phone_helpers";
-
+import { findDataForNumbers } from "../../services/data_service";
 import { formatCurrency } from "../../utils/currency_helpers";
 
 import Button from "../../components/button";
 import i18n from "i18n-js";
 import { titleize, capitalize } from "../../utils/text_helpers";
 import { usePayflowContext } from "./payflow_context";
+import InvitationSender from "../../components/invitation_sender";
 
 import * as Colors from "../../colors";
 
@@ -42,13 +42,17 @@ type EnterRecipientProps = {
 // User can select from list, search a contact, or scan a QR.
 
 const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
-  const [recipientValue, setRecipientValue] = useState<string>("");
+  const [recipientInput, setRecipientInput] = useState<string>("");
+  const [recipientAddress, setRecipientAddress] = useState<string>("");
+
   const [disabled, setDisabled] = useState<boolean>(true);
   const [hasFocus, setFocus] = useState<boolean>(false);
+  const [showInvitation, setShowInvitation] = useState<Contacts.Contact | null>(
+    null
+  );
 
   const [useContactsGranted, setUseContactsGranted] = useState<boolean>(false);
   const [contacts, setContacts] = useState<Contacts.ContactResponse>();
-  const [recipientName, setRecipientName] = useState<string>("");
 
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -66,24 +70,32 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   }, []);
 
   useEffect(() => {
+    console.log("-->recipient effect:", recipient);
     if (recipient === undefined) return;
-
-    setRecipientValue(recipient);
-    setSearchQuery(recipient);
+    setRecipientInput(recipient);
   }, [recipient]);
 
   useEffect(() => {
-    if (recipientValue && recipientValue.length > 0) {
-      if (ethers.utils.isAddress(recipientValue)) {
-        setDisabled(false);
+    console.log("--->recipientInput effect:", recipientInput);
+    if (recipientInput && recipientInput.length > 0) {
+      if (ethers.utils.isAddress(recipientInput)) {
+        setRecipientAddress(recipientInput);
       } else {
-        console.log("Setting search query", recipientValue);
-        setSearchQuery(recipientValue);
+        setRecipientAddress("");
+        setSearchQuery(recipientInput);
       }
+    } else {
+      setRecipientAddress("");
+    }
+  }, [recipientInput]);
+
+  useEffect(() => {
+    if (recipientAddress && recipientAddress.length > 0) {
+      setDisabled(false);
     } else {
       setDisabled(true);
     }
-  }, [recipientValue]);
+  }, [recipientAddress]);
 
   useEffect(() => {
     if (!useContactsGranted) return;
@@ -106,8 +118,8 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
     }
   }, [searchQuery]);
 
-  const onEnterMessage = () => {
-    payflowDispatch({ type: "set_recipient", payload: recipientValue });
+  const onContinue = () => {
+    payflowDispatch({ type: "set_recipient", payload: recipientAddress });
     navigation.navigate("enter_message");
   };
 
@@ -117,12 +129,31 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
 
   const onContactPicked = (item: Contacts.Contact) => {
     console.log("Picked contact", item);
-    console.log("isoCountry  code", Cellular.isoCountryCode);
+    setRecipientInput(item.name);
     const numbers = getPotentialFullNumbers(
-      item.phoneNumbers.map(n => n.digits),
+      item.phoneNumbers.map((n) => n.digits),
       Cellular.isoCountryCode
     );
     console.log("NUMBERS", numbers);
+
+    //given the numbers, we have to find one with a wallet address mapping
+    findDataForNumbers(numbers).then((matches) => {
+      if (!matches || !matches.length) {
+        console.log("No matches found");
+        //no  match found...should invite  the user
+        setShowInvitation(item);
+      } else if (matches.length > 1) {
+        //more  than one match is found, we should ask  the user to choose ??
+        //let's display a modal with two
+        alert("More than one match is found.");
+      } else {
+        //clean  case...just one match...safe to continue
+        //TODO: decide  on what  to  do  if  the name   in  the addressbook doesn't match
+        //what is found associated  with the  wallet address
+        setContacts({ data: [item] });
+        setRecipientAddress(matches[0].walletAddress);
+      }
+    });
   };
 
   const renderContact: ListRenderItem<Contacts.Contact> = ({
@@ -189,7 +220,14 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
           {formatCurrency(amount || "0", 2, { prefix: "$" })}
         </Text>
       </View>
-
+      <InvitationSender
+        show={!!showInvitation}
+        contact={showInvitation}
+        onCancel={() => setShowInvitation(null)}
+        onDone={() => {
+          setShowInvitation(null);
+        }}
+      />
       <TouchableWithoutFeedback
         onPress={Keyboard.dismiss}
         style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
@@ -203,8 +241,10 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
           >
             <TextInput
               multiline
-              value={recipientValue}
-              onChangeText={(text: string) => setRecipientValue(text)}
+              value={recipientInput}
+              onChangeText={(text: string) => {
+                setRecipientInput(text);
+              }}
               style={styles.inputField}
               onFocus={() => setFocus(true)}
               onBlur={() => setFocus(false)}
@@ -240,7 +280,7 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
       <View style={{ flex: 2 }}>
         <Button
           title={titleize(i18n.t("continue"))}
-          onPress={onEnterMessage}
+          onPress={onContinue}
           category="primary"
           disabled={disabled}
         />

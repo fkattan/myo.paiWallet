@@ -1,3 +1,5 @@
+const MAX_PHONE_DIGITS = 15;
+
 const getDailingCode = (isoCode: string): string | null => {
   let match;
   if (isoCode) {
@@ -53,7 +55,7 @@ export const getPotentialFullNumbers = (
       }
     }
   });
-  return potentialNumbers;
+  return potentialNumbers.filter((pn) => pn.length < MAX_PHONE_DIGITS + 2);
 };
 
 const dailingCodes = [
