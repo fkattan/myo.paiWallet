@@ -20,6 +20,7 @@
     "ethers": "5.0.24",
     "expo": "~39.0.2",
     "expo-barcode-scanner": "~9.0.0",
+    "expo-cellular": "~2.3.0",
     "expo-contacts": "~8.5.0",
     "expo-crypto": "~8.3.0",
     "expo-font": "~8.3.0",

@@ -3,6 +3,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ethers } from "ethers";
 
+/**
+ * retrieves the personal data for the current user
+ */
 export const readPersonalData = async () => {
   const firstName = await AsyncStorage.getItem("user.first_name");
   const lastName = await AsyncStorage.getItem("user.last_name");
@@ -11,9 +14,31 @@ export const readPersonalData = async () => {
 };
 
 /**
+ * finds the list of personal data mappings given the list of phone numbers
+ */
+export const findDataForNumbers = async (phoneNumbers: Array<string>) => {
+  const promises: Promise<any>[] = [];
+  phoneNumbers.forEach((pnumber) => {
+    const hashedPhone = ethers.utils.keccak256(
+      ethers.utils.toUtf8Bytes(pnumber)
+    );
+    const promise = firebase
+      .database()
+      .ref("phone-numbers/" + hashedPhone)
+      .once("value");
+    promises.push(promise);
+  });
+
+  const snapshots = await Promise.all(promises);
+  console.log("snapshots", snapshots);
+  return snapshots.map((s) => s.val()).filter((s) => !!s);
+};
+/**
  * TODO: think about what to return and how to deal with exceptions
  * stores the hashed phone number to {wallet address, firstName, lastName} in the datastore (firebase)
- * @param phone phone number
+ * @param phoneNumber phone number
+ * @param firstName first name
+ * @param lastName last name
  * @param address wallet address
  */
 export const storePersonalData = (
@@ -48,7 +73,7 @@ export const storePersonalData = (
  * @param phone phone number
  */
 export const removePersonalData = (phone: string | undefined): void => {
-  if(phone === undefined) return; 
+  if (phone === undefined) return;
 
   console.log("-->removePersonalData");
   const hashedPhone = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(phone));

@@ -3898,6 +3898,11 @@ expo-barcode-scanner@~9.0.0:
   dependencies:
     lodash "^4.6.0"
 
+expo-cellular@~2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/expo-cellular/-/expo-cellular-2.3.0.tgz#86ccf4e6ce2b94cfa5c3821137602ee3978b8e41"
+  integrity sha512-LRV4RqlXeeVpV9A5lsvYqIoB8Rx/95nzv6GdZWH5915Ep8UNLZXfd+/iG0XylkcF9QWRw+RYmPyNANM6b3WfRA==
+
 expo-constants@~9.2.0:
   version "9.2.0"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-9.2.0.tgz#e86a38793deaff9018878afac65bce2543c80a4c"
