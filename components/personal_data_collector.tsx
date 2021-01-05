@@ -67,10 +67,17 @@ const PersonalDataCollector = ({
 
           <ScrollView contentContainerStyle={{flexGrow: 1, width: Dimensions.get("screen").width}} keyboardShouldPersistTaps="handled">
 
-            <View style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'flex-start' }}>
-              <Text style={styles.title}>
-                {titleize(i18n.t("enter_account_details"))}
-              </Text>
+            <View style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+
+                <Text style={styles.title}>
+                  {titleize(i18n.t("enter_account_details"))}
+                </Text>
+                <TouchableOpacity
+                  onPress={(e) => onCancel(e) }
+                  style={{position: 'absolute', right: 20}}
+                >
+                  <AntDesign name="closecircle" size={22} color={Colors.RED} />
+                </TouchableOpacity>
             </View>
 
             <Image source={require('../assets/office.png')} resizeMode="contain" style={{ flex: 1, height: undefined, width: undefined}} />
@@ -114,10 +121,9 @@ const PersonalDataCollector = ({
               <View
                 style={{
                   display: "flex",
-                  flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "center",
-                  paddingTop: 10,
+                  marginTop: 15,
                 }}
               >
                 {showWarning && (
@@ -130,40 +136,18 @@ const PersonalDataCollector = ({
               <View
                 style={{
                   display: "flex",
-                  flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "center",
+                  marginTop: 20
                 }}
               >
                 <TouchableOpacity
-                  onPress={(e) => {
-                    handleOnConfirm(e);
-                  }}
-                  style={[styles.buttonContainer, { marginTop: 40 }]}
+                  onPress={ (e) => handleOnConfirm(e) }
+                  style={[styles.buttonContainer, {backgroundColor: Colors.PRIMARY_BLUE}]}
                 >
-                  <AntDesign name="check" size={18} color="#347AF0" />
-                  <Text style={styles.button}>{capitalize(i18n.t("confirm"))}</Text>
+                  <Text style={[styles.buttonText, {color: Colors.WHITE}]}>{capitalize(i18n.t("save_personal_data"))}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={(e) => {
-                    onCancel(e);
-                  }}
-                  style={[styles.buttonContainer, { marginTop: 40 }]}
-                >
-                  <Text style={[styles.button, { marginHorizontal: 18 }]}>
-                    &nbsp;
-                  </Text>
-                  <AntDesign name="close" size={18} color={Colors.RED_MONOCHROME} />
-                  <Text
-                    style={[
-                      styles.button,
-                      { marginLeft: 8, color: Colors.RED_MONOCHROME },
-                    ]}
-                  >
-                    {capitalize(i18n.t("cancel"))}
-                  </Text>
-                </TouchableOpacity>
               </View>
             </View>
           </ScrollView>
@@ -183,26 +167,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Montserrat-Bold",
     color: "#347AF0",
-    marginBottom: 10,
   },
+
   modal: {
     flex: 1,
     alignItems: "center",
     backgroundColor: Colors.OFF_WHITE,
   },
-  modalText: {
-    color: "#3f2949",
-    marginTop: 10,
-  },
+
   buttonContainer: {
     display: "flex",
-    flexDirection: "row",
+    paddingHorizontal: 25,
+    height: 50,
+    borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
   },
 
-  button: {
-    marginLeft: 8,
+  buttonText: {
     fontSize: 18,
     fontFamily: "Montserrat-Bold",
     color: Colors.PRIMARY_BLUE,
@@ -210,15 +192,13 @@ const styles = StyleSheet.create({
 
   textInput: {
     marginBottom: 20,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: Colors.BLACK,
-    height: 50,
-    padding: 5,
+    height: 48,
     borderWidth: 0,
     borderBottomWidth: 1,
     borderColor: Colors.LIGHT_GRAY,
-    elevation: 0,
   },
 
   textInputActive: {

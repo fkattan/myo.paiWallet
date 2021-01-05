@@ -53,6 +53,7 @@ export default {
   first_name: "primer nombre",
   last_name: "apellido",
   phone_number: "numero de telefono",
+  save_personal_data: "Guardar Cambios",
   enter_account_details: "ingrese los detalles de la cuenta",
   clear_account_details: "eliminar los detalles de la cuenta",
   invalid_account_details:

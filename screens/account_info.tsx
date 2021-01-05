@@ -9,7 +9,7 @@ import {
   Clipboard,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 
@@ -92,17 +92,22 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
     >
       <StatusBar barStyle="dark-content" />
 
-      <View style={{ flex: 2, alignItems: "center", justifyContent: "center" }}>
-        <Text style={styles.nameText}>
-          {firstName} {lastName}{" "}
-        </Text>
-        <Text style={styles.phoneText}>{phoneNumber}</Text>
-        <View
-          style={{ padding: 40, borderRadius: 20, backgroundColor: "#FFF" }}
-        >
-          <QRCode value={`ethereum:${accountAddress}`} size={240} />
+        <View style={{ flex: 3, alignItems: "center", justifyContent: "center" }}>
+          {firstName && lastName && phoneNumber && (
+            <View style={{display: 'flex',  marginBottom: -36, zIndex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.LIGHT_GRAY, width: 72, height: 72, borderRadius: 36}}>
+                <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
+            </View>
+          )}
+          <View style={{ padding: 40, borderRadius: 20, backgroundColor: "#FFF" }} >
+            {firstName && lastName && phoneNumber && (
+              <View style={{display: 'flex', alignItems: 'center', marginBottom: 20}}>
+                <Text style={styles.nameText}>{firstName} {lastName}</Text>
+                <Text style={styles.phoneText}>{phoneNumber}</Text>
+              </View>
+            )}
+            <QRCode value={`ethereum:${accountAddress}`} size={240} />
+          </View>
         </View>
-      </View>
 
       <PersonalDataCollector
         show={showDataCollector}
@@ -178,7 +183,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
                 marginLeft: 8,
                 fontSize: 18,
                 fontFamily: "Montserrat-Bold",
-                color: "#347AF0",
+                color: Colors.PRIMARY_BLUE
               }}
             >
               {capitalize(i18n.t("copy"))}
@@ -268,10 +273,10 @@ const styles = StyleSheet.create({
     color: Colors.BLACK,
   },
   phoneText: {
-    marginBottom: 2,
-    fontSize: 16,
+    marginTop: 4,
+    fontSize: 15,
     fontFamily: "Montserrat",
-    color: Colors.DARK_GRAY,
+    color: Colors.MEDIUM_GRAY,
   },
 });
 
