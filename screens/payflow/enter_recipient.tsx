@@ -70,13 +70,12 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   }, []);
 
   useEffect(() => {
-    console.log("-->recipient effect:", recipient);
     if (recipient === undefined) return;
-    setRecipientInput(recipient);
+    setRecipientInput(recipient.name);
+    setRecipientAddress(recipient.address);
   }, [recipient]);
 
   useEffect(() => {
-    console.log("--->recipientInput effect:", recipientInput);
     if (recipientInput && recipientInput.length > 0) {
       if (ethers.utils.isAddress(recipientInput)) {
         setRecipientAddress(recipientInput);
@@ -119,7 +118,10 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   }, [searchQuery]);
 
   const onContinue = () => {
-    payflowDispatch({ type: "set_recipient", payload: recipientAddress });
+    payflowDispatch({
+      type: "set_recipient",
+      payload: { name: recipientInput, address: recipientAddress },
+    });
     navigation.navigate("enter_message");
   };
 
