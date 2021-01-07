@@ -4,6 +4,9 @@ import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 
+import { ActionSheetProvider } from "@expo/react-native-action-sheet";
+import { connectActionSheet } from "@expo/react-native-action-sheet";
+
 import { AppProvider } from "./app_context";
 import Main from "./screens/main";
 
@@ -34,6 +37,16 @@ i18n.fallbacks = true;
 // TODO: ONLY FOR DEBUG
 i18n.locale = Localization.locale;
 
+function AppContent() {
+  return (
+    <AppProvider>
+      <NavigationContainer>
+        <Main />
+      </NavigationContainer>
+    </AppProvider>
+  );
+}
+
 export default function App() {
   const [fontsLoaded] = useFonts({
     FugazOne: require("./assets/fonts/FugazOne-Regular.ttf"),
@@ -43,11 +56,10 @@ export default function App() {
 
   if (!fontsLoaded) return null;
 
+  const ConnectedApp = connectActionSheet(AppContent);
   return (
-    <AppProvider>
-      <NavigationContainer>
-        <Main />
-      </NavigationContainer>
-    </AppProvider>
+    <ActionSheetProvider>
+      <ConnectedApp />
+    </ActionSheetProvider>
   );
 }

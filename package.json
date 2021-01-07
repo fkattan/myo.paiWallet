@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ethersproject/shims": "^5.0.6",
+    "@expo/react-native-action-sheet": "^3.8.0",
     "@react-native-async-storage/async-storage": "^1.13.2",
     "@react-native-community/clipboard": "^1.5.1",
     "@react-native-community/masked-view": "0.1.10",
@@ -24,6 +25,7 @@
     "expo-contacts": "~8.5.0",
     "expo-crypto": "~8.3.0",
     "expo-font": "~8.3.0",
+    "expo-image-picker": "~9.1.0",
     "expo-linear-gradient": "~8.3.0",
     "expo-local-authentication": "^9.3.0",
     "expo-localization": "~9.0.0",

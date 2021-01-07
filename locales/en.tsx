@@ -57,4 +57,11 @@ export default {
   enter_account_details: "enter account details",
   clear_account_details: "clear account details ",
   invalid_account_details: "all fields and a valid mobile number required",
+
+  need_camera_access: "Camera access permission is needed for this action",
+  need_camera_roll_access:
+    "Camera roll access permission is needed for this action",
+  take_photo: "Take photo",
+  choose_photo: "Choose photo",
+  delete_photo: "Delete photo",
 };

@@ -58,4 +58,12 @@ export default {
   clear_account_details: "eliminar los detalles de la cuenta",
   invalid_account_details:
     "todos los campos y un número de móvil válido son obligatorios",
+
+  need_camera_access:
+    "Se necesita permiso de acceso a la cámara para esta acción",
+  need_camera_roll_access:
+    "Se necesita permiso de acceso al carrete para esta acción",
+  take_photo: "tomar foto",
+  choose_photo: "elegir foto",
+  delete_photo: "borrar foto",
 };
