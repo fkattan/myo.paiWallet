@@ -177,7 +177,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
             onPress={onCopy}
             style={[styles.buttonContainer, { marginTop: 40 }]}
           >
-            <Feather name="copy" size={18} color="#347AF0" />
+            <Feather name="copy" size={18} color={Colors.PRIMARY_BLUE} />
             <Text
               style={{
                 marginLeft: 8,
@@ -203,7 +203,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
             <Text style={[styles.buttonText, { marginHorizontal: 18 }]}>
               &nbsp;
             </Text>
-            <Feather name="share-2" size={18} color="#347AF0" />
+            <Feather name="share-2" size={18} color={Colors.PRIMARY_BLUE} />
             <Text style={[styles.buttonText, { marginLeft: 8 }]}>
               {capitalize(i18n.t("share"))}
             </Text>
@@ -254,10 +254,11 @@ const styles = StyleSheet.create({
   buttonContainerFilled: {
     display: "flex",
     flexDirection: "row",
-    alignItems: "stretch",
+    alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 25,
+    height: 50,
     backgroundColor: "#347AF0",
     width: "100%",
   },
