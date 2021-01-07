@@ -10,7 +10,8 @@ export const readPersonalData = async () => {
   const firstName = await AsyncStorage.getItem("user.first_name");
   const lastName = await AsyncStorage.getItem("user.last_name");
   const phoneNumber = await AsyncStorage.getItem("user.phone_number");
-  return { firstName, lastName, phoneNumber };
+  const image = await AsyncStorage.getItem("user.image");
+  return { firstName, lastName, phoneNumber, image };
 };
 
 /**
@@ -30,8 +31,21 @@ export const findDataForNumbers = async (phoneNumbers: Array<string>) => {
   });
 
   const snapshots = await Promise.all(promises);
-  console.log("snapshots", snapshots);
   return snapshots.map((s) => s.val()).filter((s) => !!s);
+};
+
+/**
+ * stores the profile image in local storage..
+ */
+export const storeProfileImage = async (image: string) => {
+  AsyncStorage.setItem("user.image", image);
+};
+
+/**
+ * removes the profile image from local storage..
+ */
+export const removeProfileImage = async () => {
+  AsyncStorage.removeItem("user.image");
 };
 /**
  * TODO: think about what to return and how to deal with exceptions
@@ -42,7 +56,11 @@ export const findDataForNumbers = async (phoneNumbers: Array<string>) => {
  * @param address wallet address
  */
 export const storePersonalData = (
-  data: { phoneNumber: string; firstName: string; lastName: string },
+  data: {
+    phoneNumber: string;
+    firstName: string;
+    lastName: string;
+  },
   address: string
 ): void => {
   console.log("-->storePersonalData");
@@ -69,7 +87,7 @@ export const storePersonalData = (
 };
 
 /**
- * removes  the phone number-to-{firstName, lastName, wallet address} mapping
+ * removes  the phone number-to-{firstName, lastName, wallet address, image} mapping
  * @param phone phone number
  */
 export const removePersonalData = (phone: string | undefined): void => {

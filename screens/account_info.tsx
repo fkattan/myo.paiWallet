@@ -2,16 +2,20 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
+  Image,
   ActivityIndicator,
   StyleSheet,
   StatusBar,
   Share,
   Clipboard,
+  Platform,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { Feather, MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
+import * as ImagePicker from "expo-image-picker";
+import { useActionSheet } from "@expo/react-native-action-sheet";
 
 import { useAppContext } from "../app_context";
 import { capitalize } from "../utils/text_helpers";
@@ -22,6 +26,8 @@ import {
   storePersonalData,
   removePersonalData,
   readPersonalData,
+  storeProfileImage,
+  removeProfileImage,
 } from "../services/data_service";
 
 type AccountInfoProps = {
@@ -32,16 +38,56 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
   const [accountAddress, setAccountAddress] = useState<string>("");
   const [showDataCollector, setShowDataCollector] = useState<boolean>(false);
   const [state, dispatch] = useAppContext();
-  const { wallet, firstName, lastName, phoneNumber } = state;
+  const { wallet, firstName, lastName, phoneNumber, image } = state;
+  const [profileImage, setProfileImage] = useState<string | undefined>(
+    undefined
+  );
+  const { showActionSheetWithOptions } = useActionSheet();
 
   const loadPersonalData = async () => {
     const data = await readPersonalData();
-    data.firstName && dispatch({ type: "set_user_details", payload: {firstName: data.firstName || "", lastName: data.lastName || "", phoneNumber: data.phoneNumber || ""} });
+
+    console.log("PERSONAL DATA:", data);
+    data.firstName &&
+      dispatch({
+        type: "set_user_details",
+        payload: {
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          phoneNumber: data.phoneNumber || "",
+        },
+      });
+    data.image && dispatch({ type: "set_profile_image", payload: data.image });
   };
 
   useEffect(() => {
     loadPersonalData();
+    (async () => {
+      if (Platform.OS !== "web") {
+        let response = await ImagePicker.requestCameraRollPermissionsAsync();
+        if (response.status !== "granted") {
+          alert(capitalize(i18n.t("need_camera_roll_access")));
+        }
+
+        response = await ImagePicker.requestCameraPermissionsAsync();
+        if (response.status !== "granted") {
+          alert(capitalize(i18n.t("need_camera_access")));
+        }
+      }
+    })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (profileImage === "") {
+        const response = await removeProfileImage();
+        dispatch({ type: "clear_profile_image", payload: undefined });
+      } else if (profileImage) {
+        const response = await storeProfileImage(profileImage);
+        dispatch({ type: "set_profile_image", payload: profileImage });
+      }
+    })();
+  }, [profileImage]);
 
   useEffect(() => {
     if (wallet === undefined) return;
@@ -61,6 +107,71 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
     });
   };
 
+  const onUseCamera = async () => {
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setProfileImage(result.uri);
+    }
+  };
+
+  const onUseCameraRoll = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setProfileImage(result.uri);
+    }
+  };
+
+  const onDeleteProfileImage = () => {
+    setProfileImage("");
+  };
+
+  const onDisplayPhotoOptions = () => {
+    let destructiveButtonIndex = -1;
+    let cancelButtonIndex = 2;
+    const options = [
+      capitalize(i18n.t("take_photo")),
+      capitalize(i18n.t("choose_photo")),
+      capitalize(i18n.t("cancel")),
+    ];
+    if (image) {
+      destructiveButtonIndex = 0;
+      cancelButtonIndex += 1;
+      options.unshift(capitalize(i18n.t("delete_photo")));
+    }
+
+    showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex,
+        destructiveButtonIndex,
+      },
+      (buttonIndex) => {
+        switch (buttonIndex) {
+          case 0:
+            image ? onDeleteProfileImage() : onUseCamera();
+            break;
+          case 1:
+            image ? onUseCamera() : onUseCameraRoll();
+            break;
+          case 2:
+            image ? onUseCameraRoll() : null;
+            break;
+        }
+      }
+    );
+  };
   const onPersonalDataCollected = (data: {
     firstName: string;
     lastName: string;
@@ -72,6 +183,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
   };
 
   const onRemovePersonalData = () => {
+    onDeleteProfileImage();
     removePersonalData(phoneNumber);
     dispatch({ type: "clear_user_details", payload: undefined });
   };
@@ -92,22 +204,57 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
     >
       <StatusBar barStyle="dark-content" />
 
-        <View style={{ flex: 3, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ flex: 3, alignItems: "center", justifyContent: "center" }}>
+        {firstName && lastName && phoneNumber && (
+          <View
+            style={{
+              display: "flex",
+              marginBottom: -36,
+              zIndex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: Colors.LIGHT_GRAY,
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+            }}
+          >
+            <TouchableOpacity onPress={onDisplayPhotoOptions}>
+              {image ? (
+                <Image
+                  source={{ uri: image }}
+                  style={{ width: 72, height: 72, borderRadius: 36 }}
+                />
+              ) : (
+                <Ionicons
+                  name="ios-person"
+                  size={48}
+                  color={Colors.MEDIUM_GRAY}
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+        <View
+          style={{ padding: 40, borderRadius: 20, backgroundColor: "#FFF" }}
+        >
           {firstName && lastName && phoneNumber && (
-            <View style={{display: 'flex',  marginBottom: -36, zIndex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.LIGHT_GRAY, width: 72, height: 72, borderRadius: 36}}>
-                <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
+            <View
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 20,
+              }}
+            >
+              <Text style={styles.nameText}>
+                {firstName} {lastName}
+              </Text>
+              <Text style={styles.phoneText}>{phoneNumber}</Text>
             </View>
           )}
-          <View style={{ padding: 40, borderRadius: 20, backgroundColor: "#FFF" }} >
-            {firstName && lastName && phoneNumber && (
-              <View style={{display: 'flex', alignItems: 'center', marginBottom: 20}}>
-                <Text style={styles.nameText}>{firstName} {lastName}</Text>
-                <Text style={styles.phoneText}>{phoneNumber}</Text>
-              </View>
-            )}
-            <QRCode value={`ethereum:${accountAddress}`} size={240} />
-          </View>
+          <QRCode value={`ethereum:${accountAddress}`} size={240} />
         </View>
+      </View>
 
       <PersonalDataCollector
         show={showDataCollector}
@@ -183,7 +330,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
                 marginLeft: 8,
                 fontSize: 18,
                 fontFamily: "Montserrat-Bold",
-                color: Colors.PRIMARY_BLUE
+                color: Colors.PRIMARY_BLUE,
               }}
             >
               {capitalize(i18n.t("copy"))}
