@@ -15,6 +15,8 @@ import {
   TextInput,
   TouchableOpacity,
   ListRenderItem,
+  KeyboardAvoidingView,
+  Dimensions,
 } from "react-native";
 import * as Contacts from "expo-contacts";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -31,6 +33,8 @@ import { usePayflowContext } from "./payflow_context";
 import InvitationSender from "../../components/invitation_sender";
 
 import * as Colors from "../../colors";
+import { Platform } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 
 type EnterRecipientProps = {
   route: any;
@@ -99,7 +103,6 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   useEffect(() => {
     if (!useContactsGranted) return;
     if (searchQuery.length >= 3) {
-      console.log("Searching Contacts", searchQuery);
 
       Contacts.getContactsAsync({
         name: searchQuery,
@@ -152,6 +155,7 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
         //clean  case...just one match...safe to continue
         //TODO: decide  on what  to  do  if  the name   in  the addressbook doesn't match
         //what is found associated  with the  wallet address
+        console.log("Matched !!", matches);
         setContacts({ data: [item] });
         setRecipientAddress(matches[0].walletAddress);
       }
@@ -165,40 +169,44 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
     if (!item || !item.phoneNumbers) return <View />;
 
     return (
-      <TouchableOpacity
-        onPress={() => onContactPicked(item)}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          marginHorizontal: 10,
-        }}
-      >
-        {item.imageAvailable && item.image ? (
-          <Image
-            source={item.image}
-            style={{ width: 64, height: 64, borderRadius: 32 }}
-          />
-        ) : (
-          <View
+      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? "padding": "height"}>
+        <ScrollView contentContainerStyle={{flexGrow: 1, width: Dimensions.get("screen").width}} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity
+            onPress={() => onContactPicked(item)}
             style={{
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: Colors.LIGHT_GRAY,
-              width: 64,
-              height: 64,
-              borderRadius: 32,
+              justifyContent: "flex-start",
+              marginHorizontal: 10,
             }}
           >
-            <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
-          </View>
-        )}
-        <Text style={{ marginTop: 8, width: 84, textAlign: "center" }}>
-          {item.name}
-        </Text>
-      </TouchableOpacity>
+            {item.imageAvailable && item.image ? (
+              <Image
+                source={item.image}
+                style={{ width: 64, height: 64, borderRadius: 32 }}
+              />
+            ) : (
+              <View
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: Colors.LIGHT_GRAY,
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                }}
+              >
+                <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
+              </View>
+            )}
+            <Text style={{ marginTop: 8, width: 84, textAlign: "center" }}>
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+          </ScrollView>
+      </KeyboardAvoidingView>
     );
   };
 

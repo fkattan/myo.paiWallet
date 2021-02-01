@@ -10,7 +10,7 @@ import { StyleSheet, View, Text, StatusBar, Animated } from "react-native";
 import { FontAwesome } from '@expo/vector-icons'; 
 
 import { useAppState } from "../../app_context";
-import { TransactionStatus, usePayflowContext } from "./payflow_context";
+import { Recipient, TransactionStatus, usePayflowContext } from "./payflow_context";
 
 import { ethers } from "ethers";
 import { L2_PAI_ADDRESS } from "../../constants";
@@ -29,7 +29,8 @@ type EnterRecipientProps = {
     navigation:any
 }
 
-const RELAYER_URL =  "http://192.168.7.73:3001";
+// const RELAYER_URL =  "https://myo-backend-55739.uk.r.appspot.com";
+const RELAYER_URL = "http://192.168.7.73:8080";
 
 const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
@@ -105,28 +106,27 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
         }
     }, [txStatus])
 
-    // Execute Payment when TX Status is set to IN_PROGRESS
-    // Separate execution from button press, to get better UI performance
     useEffect(() => {
-        if(txStatus === TransactionStatus.IN_PROGRESS) {
+        switch(txStatus) {
+            // Execute Payment when TX Status is set to IN_PROGRESS
+            // Separate execution from button press, to get better UI performance
+            case TransactionStatus.IN_PROGRESS:
+                if(!wallet || !amount || !recipient) {
+                    console.error("Invalid wallet, amount, or recipient");
+                    return;
+                }
+                processPaymentRequest(wallet, amount, recipient)
+                break; 
+            
+            // Store Memo field locally: associated with this tx's hash
+            case TransactionStatus.SUCCESS: 
+                if(receipt === undefined || memo === undefined) break;
+                AsyncStorage.setItem(receipt.transactionHash, memo);
 
-            if(!wallet || !amount || !recipient) {
-                console.error("Invalid wallet, amount, or recipient");
-                return;
-            }
-            processPaymentRequest(wallet, amount, recipient)
         }
 
     }, [txStatus]);
 
-    // Store Memo field locally associated with this tx's hash
-    useEffect(() => {
-        console.log("TxStatus Changed: ", txStatus);
-        if(txStatus === TransactionStatus.SUCCESS && receipt !== undefined && memo !== undefined) {
-            console.log("Storing Description Locally", receipt.transactionHash, memo);
-            AsyncStorage.setItem(receipt.transactionHash, memo);
-        }
-    },[txStatus])
 
     const onConfirmPayment = () => {
 
@@ -138,7 +138,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
         transitionToInProgress();
     }
 
-    const processPaymentRequest = async (wallet:ethers.Wallet, amount:string, recipient:string) => {
+    const processPaymentRequest = async (wallet:ethers.Wallet, amount:string, recipient:Recipient) => {
 
         setProgress(0.25);
 
@@ -152,13 +152,14 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
             const {timestamp} = await provider.getBlock(await provider.getBlockNumber());
             const nonce = await wallet.getTransactionCount();
             const metaNonce = await pai.nonces(signerAddress);
+
             // TX valid for 60 seconds. if it's not sent before that it will be expired. 
             const deadline:string = ((timestamp + 60)).toString();
             const weiAmount = toWei(amount)
             setProgress(0.40);
 
             // const rsvSignature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
-            const signature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
+            const signature = await eip712Sign(chainId, signerAddress, recipient.address, weiAmount, metaNonce.toString(), deadline, wallet);
             setProgress(0.50);
 
             if(signature === undefined) {
@@ -166,10 +167,13 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 return;
             }
 
-            // TODO: Send to relayer.
+            const controller = new AbortController();
+            const fetchTimeout = setTimeout(() => controller.abort(), 10000); // 10s
 
-            console.log("Sending Request to relayer");
+            //TODO: Add Timeout and error page
+            console.log("Sending Request to relayer", RELAYER_URL);
             const response = await fetch(RELAYER_URL, {
+                signal: controller.signal,
                 method: 'POST',
                 cache: 'no-cache',
                 headers: {
@@ -177,12 +181,13 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 },
                 body: JSON.stringify({
                     signerAddress, 
-                    recipient,
+                    recipient: recipient.address,
                     wei: weiAmount,
                     deadline, 
                     signature
                 })
             });
+            clearTimeout(fetchTimeout);
             console.log("Relayer Response", response);
 
             if(response.ok) {
@@ -236,7 +241,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 <LinearGradient locations={[0.10, 0.90]} colors={[Colors.PRIMARY_BLUE, Colors.PRIMARY_BLUE_MONOCHROME_DARK]} style={{flex:0.35, width: '100%', alignItems: 'center', justifyContent: 'center'}}>
                         <Button 
                             title={[TransactionStatus.SUCCESS, TransactionStatus.ERROR].indexOf(txStatus) !== -1 ? capitalize(i18n.t("back_to_wallet")) : capitalize(i18n.t("back"))} 
-                            category="default" 
+                            category="primary" 
                             onPress={() => [TransactionStatus.SUCCESS, TransactionStatus.ERROR].indexOf(txStatus) !== -1 ? navigation.navigate('home') : navigation.goBack()}
                             disabled={[TransactionStatus.SUCCESS, TransactionStatus.ERROR, TransactionStatus.UNDEFINED].indexOf(txStatus) === -1}
                             />
@@ -244,8 +249,14 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 <View style={{flex: 1, marginTop: -20, borderTopLeftRadius: 20, borderTopRightRadius: 20, borderColor: Colors.BLACK, width: "100%", backgroundColor: Colors.WHITE, paddingTop: 20, paddingBottom: 40}}>
                     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: Colors.LIGHT_GRAY, paddingVertical: 20, width: "100%"}}>
                         <Text style={styles.label}>{capitalize(i18n.t("recipient"))}</Text>
-                        <Text style={styles.address}>{recipient.slice(0,24)}</Text>
-                        <Text style={styles.address}>{recipient.slice(24)}</Text>
+                        {recipient.name ? (
+                            <Text style={styles.address}>{recipient.name}</Text>
+                        ): (
+                            <View>
+                                <Text style={styles.address}>{recipient.address.slice(0,24)}</Text>
+                                <Text style={styles.address}>{recipient.address.slice(24)}</Text>
+                            </View>
+                        )}
                     </View>
 
                     <View style={{flex: 1, alignItems: 'center', justifyContent: 'center',  width: '100%', borderBottomWidth: 1, borderBottomColor: Colors.LIGHT_GRAY, paddingVertical: 20}}>

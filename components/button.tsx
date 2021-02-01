@@ -18,6 +18,7 @@ const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps
 
         switch(category) {
             case "primary": return { backgroundColor: Colors.PRIMARY_BLUE }
+            case "primary-mono": return { backgroundColor: Colors.PRIMARY_BLUE_MONOCHROME }
             case "success": return { backgroundColor: Colors.GREEN }
             case "danger":  return { backgroundColor: Colors.RED }
             case "warning": return { backgroundColor: Colors.YELLOW }
@@ -29,6 +30,7 @@ const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps
 
         switch(category) {
             case "primary": return  Colors.WHITE
+            case "primary-mono": return Colors.WHITE
             case "success": return  Colors.WHITE
             case "danger":  return  Colors.BLACK
             case "warning": return  Colors.BLACK
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: 14,
         paddingHorizontal: 24,
-        borderRadius: 28,
+        borderRadius: 8,
     },
 
 

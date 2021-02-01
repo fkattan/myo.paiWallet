@@ -1,5 +1,8 @@
 import React from 'react';
+import {Text, TouchableOpacity} from 'react-native';
 import i18n from 'i18n-js';
+
+import { AntDesign } from "@expo/vector-icons";
 
 import HomeScreen from './home';
 import PayflowEntry from './payflow/index';
@@ -12,6 +15,7 @@ import { AuthState, useAppState, AppErrorCodes } from '../app_context';
 import  * as Colors from '../colors';
 
 import { createStackNavigator } from '@react-navigation/stack';
+import { capitalize } from '../utils/text_helpers';
 
 const Stack = createStackNavigator();
 
@@ -50,15 +54,16 @@ const Main = () => {
                 options={({navigation}) => ({
                     title: 'Peso Argentino Intangible',
                     headerTitleAlign: 'center',
+                    headerBackTitle: capitalize(i18n.t("back")),
                     headerTintColor: Colors.WHITE,
                     headerStyle: {
                         backgroundColor: Colors.PRIMARY_BLUE_MONOCHROME_DARK,
                         elevation: 0,
                         shadowOpacity: 0,
-                        borderBottomWidth: 0
+                        borderBottomWidth: 0,
                     },
                     headerTitleStyle: {
-                        fontFamily: "Montserrat-Bold"
+                        fontFamily: "Montserrat-Bold",
                     }
                 })} 
             />
@@ -77,20 +82,26 @@ const Main = () => {
                 options={({navigation}) => ({
                     title: 'Peso Argentino Intangible',
                     headerTitleAlign: 'center',
-                    headerLeft: () => undefined,
+                    headerLeft: () => null, 
+                    headerRight: () => (
+                        <TouchableOpacity style={{marginRight: 25}} onPress={() => navigation.navigate('home')}>
+                            <AntDesign name="closecircle" size={24} color={Colors.OFF_WHITE} />
+                        </TouchableOpacity>
+                    ),
+                    headerBackTitleStyle: {color: Colors.WHITE},
+                    headerLeftContainerStyle: {backgroundColor: Colors.PRIMARY_BLUE},
                     headerStyle: {
-                        backgroundColor: Colors.OFF_WHITE,
+                        backgroundColor: Colors.PRIMARY_BLUE,
                         elevation: 0,
                         shadowOpacity: 0,
                         borderBottomWidth: 0,
                     },
                     headerTitleStyle: {
-                        fontFamily: "Montserrat-Bold"
+                        fontFamily: "Montserrat-Bold",
+                        color: Colors.WHITE
                     }
                 })} 
             />
-
-
         </Stack.Navigator>
     );
 }

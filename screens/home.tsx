@@ -122,11 +122,11 @@ const Home = ({navigation}:HomeProps) => {
         <View style={[{flex: 6}, styles.actionContainer]}>
             <View style={{flex: 1, flexDirection: 'row', alignItems: 'flex-start' }}>
                 <View style={{flex: 9}}>
-                    <Button category="default" title={capitalize(i18n.t("send"))} iconName="upload" onPress={() => navigation.navigate("payflow")} disabled={loading || !initialized} /> 
+                    <Button category="primary-mono" title={capitalize(i18n.t("send"))} iconName="upload" onPress={() => navigation.navigate("payflow")} disabled={loading || !initialized} /> 
                 </View>
                 <View style={{flex: 2}}><Text>&nbsp;</Text></View>
                 <View style={{flex: 9}}>
-                    <Button category="default" title={capitalize(i18n.t("receive"))} iconName="download" onPress={() => {navigation.navigate("account_info")}} disabled={loading || !initialized}  /> 
+                    <Button category="primary-mono" title={capitalize(i18n.t("receive"))} iconName="download" onPress={() => {navigation.navigate("account_info")}} disabled={loading || !initialized}  /> 
                 </View>
             </View>
             <View style={[{flex: 3}, styles.transactionHistoryContainer]}>

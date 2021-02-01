@@ -3,6 +3,8 @@ import React from 'react';
 import { capitalize, titleize } from '../../utils/text_helpers';
 import i18n from 'i18n-js';
 
+import { AntDesign } from "@expo/vector-icons";
+
 import EnterAmount from './enter_amount';
 import EnterRecipient from './enter_recipient';
 import EnterMessage from './enter_message';
@@ -12,6 +14,7 @@ import ScanScreen from '../scan_qr';
 import { PayflowProvider } from './payflow_context';
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import * as Colors  from '../../colors';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const Stack = createStackNavigator();
 
@@ -99,6 +102,11 @@ const Index = ({navigation: rootNavigation}:PayflowIndexProps) => {
                             fontFamily: "Montserrat-Bold",
                             color: Colors.WHITE
                         },
+                        headerRight: () => (
+                            <TouchableOpacity onPress={() => navigation.navigate('home')} style={{marginRight: 25}}>
+                                <AntDesign name="closecircle" size={24} color={Colors.OFF_WHITE} />
+                            </TouchableOpacity>
+                        )
                 })} />
 
                 <Stack.Screen
@@ -107,7 +115,7 @@ const Index = ({navigation: rootNavigation}:PayflowIndexProps) => {
                     options={({navigation}) => ({
                         title: capitalize(i18n.t("scan_qr")),
                         headerBackTitle: capitalize(i18n.t("back")),
-                        headerRight: () => null
+                        headerRight: () => null 
                     })} />
 
             </Stack.Navigator>

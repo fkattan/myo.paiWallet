@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,8 +18,10 @@ import { AntDesign } from "@expo/vector-icons";
 import * as Colors from "../colors";
 import { capitalize, titleize } from "../utils/text_helpers";
 import PhoneInput from "react-native-phone-number-input";
+import { CountryCode } from "react-native-country-picker-modal"
 import * as Localization from "expo-localization";
 import i18n from "i18n-js";
+
 
 type PersonalDataCollectorProps = {
   onCancel: (event: GestureResponderEvent) => void;
@@ -55,6 +57,7 @@ const PersonalDataCollector = ({
     checkValid &&
       onConfirm({ firstName, lastName, phoneNumber: formattedValue });
   };
+
   return (
     <Modal
       animationType={"slide"}
@@ -103,7 +106,7 @@ const PersonalDataCollector = ({
               <PhoneInput
                 ref={phoneInput}
                 defaultValue={value}
-                defaultCode={Localization.locale.split("-")[1]}
+                defaultCode={Localization.locale.split("-")[1] as CountryCode}
                 layout="first"
                 onChangeText={(text) => {
                   setShowWarning(false);

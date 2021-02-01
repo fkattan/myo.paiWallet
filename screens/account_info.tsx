@@ -29,6 +29,7 @@ import {
   storeProfileImage,
   removeProfileImage,
 } from "../services/data_service";
+import Button from "../components/button";
 
 type AccountInfoProps = {
   navigation: any;
@@ -199,7 +200,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
   return (
     <LinearGradient
       style={styles.container}
-      colors={[Colors.OFF_WHITE, Colors.LIGHT_GRAY]}
+      colors={[Colors.PRIMARY_BLUE, Colors.PRIMARY_BLUE_MONOCHROME]}
       locations={[0.5, 1]}
     >
       <StatusBar barStyle="dark-content" />
@@ -324,13 +325,13 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
             onPress={onCopy}
             style={[styles.buttonContainer, { marginTop: 40 }]}
           >
-            <Feather name="copy" size={18} color={Colors.PRIMARY_BLUE} />
+            <Feather name="copy" size={18} color={Colors.WHITE} />
             <Text
               style={{
                 marginLeft: 8,
                 fontSize: 18,
                 fontFamily: "Montserrat-Bold",
-                color: Colors.PRIMARY_BLUE,
+                color: Colors.WHITE,
               }}
             >
               {capitalize(i18n.t("copy"))}
@@ -350,8 +351,9 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
             <Text style={[styles.buttonText, { marginHorizontal: 18 }]}>
               &nbsp;
             </Text>
-            <Feather name="share-2" size={18} color={Colors.PRIMARY_BLUE} />
-            <Text style={[styles.buttonText, { marginLeft: 8 }]}>
+            <Feather name="share-2" size={18} color={Colors.WHITE} />
+            <Text style={[styles.buttonText, { marginLeft: 8, color: Colors.WHITE
+             }]}>
               {capitalize(i18n.t("share"))}
             </Text>
           </TouchableOpacity>
@@ -368,17 +370,7 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
           width: "100%",
         }}
       >
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate("home");
-          }}
-          style={styles.buttonContainerFilled}
-        >
-          <Feather name="arrow-left" size={18} color="#FFF" />
-          <Text style={[styles.buttonText, { color: "#FFF", marginLeft: 8 }]}>
-            {capitalize(i18n.t("back"))}
-          </Text>
-        </TouchableOpacity>
+        <Button category="primary-mono" title={capitalize(i18n.t("back"))} iconName="arrowleft" onPress={() => navigation.navigate("home")} /> 
       </View>
     </LinearGradient>
   );

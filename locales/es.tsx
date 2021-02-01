@@ -17,6 +17,8 @@ export default {
   error: "Pago No Realizado",
 
   auth_prompt_message: "Ingresar para usar la billetera de PAI",
+  biometric_auth_user_not_enrolled: "Para usar PAI debes configurar tu ingreso biometrico",
+  biometric_auth_user_not_enrolled_description: "PAI utiliza ingreso biometrico para mantener tus fondos seguros. Debes configurar accesso biometrico en tu dispositivo antes de usar PAI",
 
   scan_qr: "Scan QR",
   scan_qr_to_continue: "scan qr to para continuar",
@@ -29,7 +31,7 @@ export default {
 
   enter_amount: "ingrese monto",
   available: "disponible",
-  enter_recipient: "ingrese destinatario",
+  enter_recipient: "agregar destinatario",
 
   choose_recipient: "ingrese destinatario",
   amount_to_send: "monto",

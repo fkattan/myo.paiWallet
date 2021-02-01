@@ -17,6 +17,9 @@ export default {
   error: "error",
 
   auth_prompt_message: "Authenticate to Use PAI Wallet",
+  biometric_auth_user_not_enrolled: "Biometric authentication must be configured to use PAI",
+  biometric_auth_user_not_enrolled_description: "PAI secures your fund by authentication through your biometric sensors; you must enroll in your device's setup before entering PAI wallet",
+
 
   scan_qr: "Scan QR",
   scan_qr_to_continue: "scan qr to continue",
