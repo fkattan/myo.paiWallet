@@ -306,8 +306,8 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
               },
             ]}
           >
-            <MaterialCommunityIcons name="account" size={18} color="#347AF0" />
-            <Text style={[styles.buttonText, { marginLeft: 8 }]}>
+            <MaterialCommunityIcons name="account" size={18} color={Colors.WHITE} />
+            <Text style={[styles.buttonText, { marginLeft: 8, color: Colors.WHITE }]}>
               {capitalize(i18n.t("enter_account_details"))}
             </Text>
           </TouchableOpacity>

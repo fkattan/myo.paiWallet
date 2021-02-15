@@ -14,7 +14,7 @@ type ButtonProps = {
 const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps) => {
 
     const getBg = (category:string) => {
-        if(disabled) return {backgroundColor: '#CFD2D8'};
+        // if(disabled) return {backgroundColor: '#CFD2D8'};
 
         switch(category) {
             case "primary": return { backgroundColor: Colors.PRIMARY_BLUE }
@@ -22,11 +22,22 @@ const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps
             case "success": return { backgroundColor: Colors.GREEN }
             case "danger":  return { backgroundColor: Colors.RED }
             case "warning": return { backgroundColor: Colors.YELLOW }
+            case "disabled": return { backgroundColor: Colors.MEDIUM_GRAY}
             default: return { backgroundColor: Colors.MEDIUM_GRAY }
         }
     }
     const getFg = (category:string) => {
-        if(disabled) return "#FFF";
+        if(disabled) {
+            switch(category) {
+                case "primary": return  Colors.PRIMARY_BLUE_MONOCHROME
+                case "primary-mono": return Colors.PRIMARY_BLUE
+                case "success": return  Colors.GRAY
+                case "danger":  return  Colors.GRAY
+                case "warning": return  Colors.GRAY
+                case "disabled": return Colors.DARK_GRAY
+                default: return  Colors.GRAY
+            }
+        }
 
         switch(category) {
             case "primary": return  Colors.WHITE
@@ -34,6 +45,7 @@ const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps
             case "success": return  Colors.WHITE
             case "danger":  return  Colors.BLACK
             case "warning": return  Colors.BLACK
+            case "disabled": return Colors.GRAY
             default: return  Colors.WHITE
         }
     }

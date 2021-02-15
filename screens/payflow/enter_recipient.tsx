@@ -74,8 +74,10 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   }, []);
 
   useEffect(() => {
+    console.log(recipient);
     if (recipient === undefined) return;
-    setRecipientInput(recipient.name);
+
+    setRecipientInput(recipient.name ? recipient.name : recipient.address);
     setRecipientAddress(recipient.address);
   }, [recipient]);
 
@@ -133,7 +135,8 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   };
 
   const onContactPicked = (item: Contacts.Contact) => {
-    console.log("Picked contact", item);
+    if(item.phoneNumbers === undefined) return; 
+
     setRecipientInput(item.name);
     const numbers = getPotentialFullNumbers(
       item.phoneNumbers.map((n) => n.digits),

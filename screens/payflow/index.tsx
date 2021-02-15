@@ -55,7 +55,7 @@ const Index = ({navigation: rootNavigation}:PayflowIndexProps) => {
                     component={EnterAmount} 
                     options={({navigation}) => ({
                         title: titleize(i18n.t("enter_amount")),
-                        headerBackTitle: capitalize(i18n.t("back")),
+                        headerBackTitle: capitalize(i18n.t("cancel")),
                         headerStyle: flatHeaderStyle,
                         headerTitleStyle: {
                             fontFamily: "Montserrat-Bold"

@@ -56,7 +56,7 @@ export default {
   last_name: "apellido",
   phone_number: "numero de telefono",
   save_personal_data: "Guardar Cambios",
-  enter_account_details: "ingrese los detalles de la cuenta",
+  enter_account_details: "Registrá tu Telefono",
   clear_account_details: "eliminar los detalles de la cuenta",
   invalid_account_details:
     "todos los campos y un número de móvil válido son obligatorios",

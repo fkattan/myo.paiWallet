@@ -19,39 +19,40 @@ const getDailingCode = (isoCode: string): string | null => {
  * @param isoCountryCode
  */
 export const getPotentialFullNumbers = (
-  phoneNumbers: Array<string>,
+  phoneNumbers: Array<string|undefined>,
   isoCountryCode: string
 ): Array<string> => {
   const dailingCode = getDailingCode(isoCountryCode);
   const potentialNumbers: string[] = [];
 
-  console.log("Preparing potential list for ", phoneNumbers);
   phoneNumbers.forEach((number) => {
-    if (number.indexOf("+") === 0) {
-      potentialNumbers.push(number);
-    } else {
-      //the number doesn't begin with '+'
-      //if the number begins with '0' get rid of it as there are no international codes that begin
-      //with '0'
-      if (number.indexOf("0") === 0) {
-        number = number.replace("0", "");
-      }
-      //add the number with '+' just in case
-      potentialNumbers.push("+" + number);
-
-      //if we know the international dailing code
-      if (dailingCode) {
-        //if the number begins with 'dailingCode', prepend '+' and add to the list
-        if (number.indexOf(dailingCode) === 0) {
-          potentialNumbers.push("+" + number);
-        } else {
-          //if the number doesn't begin with 'dailingCode', prepend '+dailingCode' and add to the list
-          potentialNumbers.push("+" + dailingCode + number);
-        }
+    if(number !== undefined) {
+      if (number.indexOf("+") === 0) {
+        potentialNumbers.push(number);
       } else {
-        //we don't know the international dialing code
-        //prepend '+' and add to the potential list
+        //the number doesn't begin with '+'
+        //if the number begins with '0' get rid of it as there are no international codes that begin
+        //with '0'
+        if (number.indexOf("0") === 0) {
+          number = number.replace("0", "");
+        }
+        //add the number with '+' just in case
         potentialNumbers.push("+" + number);
+
+        //if we know the international dailing code
+        if (dailingCode) {
+          //if the number begins with 'dailingCode', prepend '+' and add to the list
+          if (number.indexOf(dailingCode) === 0) {
+            potentialNumbers.push("+" + number);
+          } else {
+            //if the number doesn't begin with 'dailingCode', prepend '+dailingCode' and add to the list
+            potentialNumbers.push("+" + dailingCode + number);
+          }
+        } else {
+          //we don't know the international dialing code
+          //prepend '+' and add to the potential list
+          potentialNumbers.push("+" + number);
+        }
       }
     }
   });
