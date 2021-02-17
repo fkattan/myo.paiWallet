@@ -71,7 +71,6 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   }, []);
 
   useEffect(() => {
-    console.log(recipient);
     if (recipient === undefined) return;
 
     setRecipientInput(recipient.name ? recipient.name : recipient.address);
@@ -107,7 +106,7 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
     } else {
       setContacts(undefined);
     }
-  }, [searchQuery]);
+  }, [searchQuery, useContactsGranted]);
 
   const onContinue = () => {
     if(!recipientAddress || !ethers.utils.isAddress(recipientAddress)) return;
@@ -137,7 +136,6 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
     findDataForNumbers(numbers)
     .then((matches) => {
       if (!matches || !matches.length) {
-        console.log("No matches found");
         //no  match found...should invite  the user
         setShowInvitation(item);
       } else if (matches.length > 1) {
@@ -158,7 +156,6 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   };
 
   const renderContact: ListRenderItem<Contacts.Contact> = ({ item, }): ReactElement => {
-    // console.log("Contact item:", item);
     if (!item || !item.phoneNumbers) return <View />;
 
     return (
