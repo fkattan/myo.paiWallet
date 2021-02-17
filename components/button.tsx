@@ -1,5 +1,5 @@
 import React from 'react';
-import {Pressable, View, Text, StyleSheet, GestureResponderEvent} from 'react-native';
+import {Pressable, View, Text, StyleSheet, GestureResponderEvent, ActivityIndicator} from 'react-native';
 import {AntDesign} from '@expo/vector-icons';
 import * as Colors from '../colors';
 
@@ -9,12 +9,24 @@ type ButtonProps = {
     iconName?: string,
     category?:string,
     disabled?:boolean
+    loading?:boolean
 }
 
-const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps) => {
+const Button = ({onPress, category, iconName, title, disabled=false, loading=false}:ButtonProps) => {
 
     const getBg = (category:string) => {
         // if(disabled) return {backgroundColor: '#CFD2D8'};
+        if(disabled) {
+            switch(category) {
+                case "primary": return { backgroundColor: Colors.GRAY }
+                case "primary-mono": return { backgroundColor: Colors.GRAY }
+                case "success": return { backgroundColor: Colors.GRAY }
+                case "danger":  return { backgroundColor: Colors.GRAY }
+                case "warning": return { backgroundColor: Colors.GRAY }
+                case "disabled": return { backgroundColor: Colors.GRAY}
+                default: return { backgroundColor: Colors.GRAY }
+            }
+        }
 
         switch(category) {
             case "primary": return { backgroundColor: Colors.PRIMARY_BLUE }
@@ -29,13 +41,13 @@ const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps
     const getFg = (category:string) => {
         if(disabled) {
             switch(category) {
-                case "primary": return  Colors.PRIMARY_BLUE_MONOCHROME
-                case "primary-mono": return Colors.PRIMARY_BLUE
-                case "success": return  Colors.GRAY
-                case "danger":  return  Colors.GRAY
-                case "warning": return  Colors.GRAY
-                case "disabled": return Colors.DARK_GRAY
-                default: return  Colors.GRAY
+                case "primary": return  Colors.LIGHT_GRAY
+                case "primary-mono": return Colors.LIGHT_GRAY
+                case "success": return  Colors.LIGHT_GRAY
+                case "danger":  return  Colors.LIGHT_GRAY
+                case "warning": return  Colors.LIGHT_GRAY
+                case "disabled": return Colors.LIGHT_GRAY
+                default: return  Colors.LIGHT_GRAY
             }
         }
 
@@ -60,6 +72,7 @@ const Button = ({onPress, category, iconName, title, disabled=false}:ButtonProps
         <Pressable onPress={handleOnPress} style={{marginTop: 18}}>
             <View style={[styles.buttonContainer, getBg(category|| "primary")]}>
                 {iconName && (<View style={{marginRight: 8}}><AntDesign name={iconName} size={18} color={getFg(category || "primary")}/></View>)}
+                {loading && (<ActivityIndicator size="small" style={{marginRight: 8}} color={Colors.WHITE} />)}
                 <Text style={[styles.buttonText, {color: getFg(category || "primary")}]}>{title}</Text>
             </View>
         </Pressable>

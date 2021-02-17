@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode, useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import * as Cellular from "expo-cellular";
 import "@ethersproject/shims";
 import { ethers } from "ethers";
@@ -7,8 +7,6 @@ import {
   StyleSheet,
   View,
   Text,
-  TouchableWithoutFeedback,
-  Keyboard,
   StatusBar,
   Image,
   FlatList,
@@ -16,11 +14,12 @@ import {
   TouchableOpacity,
   ListRenderItem,
   KeyboardAvoidingView,
-  Dimensions,
+  ScrollView
 } from "react-native";
 import * as Contacts from "expo-contacts";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
+import {Feather} from '@expo/vector-icons';
 
 import { getPotentialFullNumbers } from "../../utils/phone_helpers";
 import { findDataForNumbers } from "../../services/data_service";
@@ -34,7 +33,6 @@ import InvitationSender from "../../components/invitation_sender";
 
 import * as Colors from "../../colors";
 import { Platform } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 
 type EnterRecipientProps = {
   route: any;
@@ -47,18 +45,17 @@ type EnterRecipientProps = {
 
 const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   const [recipientInput, setRecipientInput] = useState<string>("");
-  const [recipientAddress, setRecipientAddress] = useState<string>("");
+  const [recipientAddress, setRecipientAddress] = useState<string|undefined>(undefined);
 
   const [disabled, setDisabled] = useState<boolean>(true);
   const [hasFocus, setFocus] = useState<boolean>(false);
-  const [showInvitation, setShowInvitation] = useState<Contacts.Contact | null>(
-    null
-  );
+  const [showInvitation, setShowInvitation] = useState<Contacts.Contact | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [useContactsGranted, setUseContactsGranted] = useState<boolean>(false);
   const [contacts, setContacts] = useState<Contacts.ContactResponse>();
 
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string|undefined>(undefined);
 
   const [payflowState, payflowDispatch] = usePayflowContext();
   const { amount, recipient } = payflowState;
@@ -79,33 +76,23 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
 
     setRecipientInput(recipient.name ? recipient.name : recipient.address);
     setRecipientAddress(recipient.address);
+    setDisabled(false);
   }, [recipient]);
 
   useEffect(() => {
-    if (recipientInput && recipientInput.length > 0) {
-      if (ethers.utils.isAddress(recipientInput)) {
-        setRecipientAddress(recipientInput);
-      } else {
-        setRecipientAddress("");
-        setSearchQuery(recipientInput);
-      }
+    if (!recipientInput) return; 
+
+    if(!ethers.utils.isAddress(recipientInput)) {
+      setSearchQuery(recipientInput)
     } else {
-      setRecipientAddress("");
+      setSearchQuery(undefined);
     }
   }, [recipientInput]);
 
   useEffect(() => {
-    if (recipientAddress && recipientAddress.length > 0) {
-      setDisabled(false);
-    } else {
-      setDisabled(true);
-    }
-  }, [recipientAddress]);
-
-  useEffect(() => {
     if (!useContactsGranted) return;
-    if (searchQuery.length >= 3) {
-
+    
+    if (searchQuery && searchQuery.length >= 3) {
       Contacts.getContactsAsync({
         name: searchQuery,
         fields: [
@@ -123,6 +110,8 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   }, [searchQuery]);
 
   const onContinue = () => {
+    if(!recipientAddress || !ethers.utils.isAddress(recipientAddress)) return;
+
     payflowDispatch({
       type: "set_recipient",
       payload: { name: recipientInput, address: recipientAddress },
@@ -137,15 +126,16 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   const onContactPicked = (item: Contacts.Contact) => {
     if(item.phoneNumbers === undefined) return; 
 
-    setRecipientInput(item.name);
+    setIsLoading(true);
+
     const numbers = getPotentialFullNumbers(
       item.phoneNumbers.map((n) => n.digits),
       Cellular.isoCountryCode
     );
-    console.log("NUMBERS", numbers);
 
     //given the numbers, we have to find one with a wallet address mapping
-    findDataForNumbers(numbers).then((matches) => {
+    findDataForNumbers(numbers)
+    .then((matches) => {
       if (!matches || !matches.length) {
         console.log("No matches found");
         //no  match found...should invite  the user
@@ -158,81 +148,74 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
         //clean  case...just one match...safe to continue
         //TODO: decide  on what  to  do  if  the name   in  the addressbook doesn't match
         //what is found associated  with the  wallet address
-        console.log("Matched !!", matches);
-        setContacts({ data: [item] });
+        setContacts({ data: [item], hasPreviousPage: false, hasNextPage: false });
         setRecipientAddress(matches[0].walletAddress);
+        setRecipientInput(item.name);
+        setDisabled(false);
       }
-    });
+    })
+    .finally(() => setIsLoading(false));
   };
 
-  const renderContact: ListRenderItem<Contacts.Contact> = ({
-    item,
-  }): ReactElement => {
-    //console.log("Contact item:", item);
+  const renderContact: ListRenderItem<Contacts.Contact> = ({ item, }): ReactElement => {
+    // console.log("Contact item:", item);
     if (!item || !item.phoneNumbers) return <View />;
 
     return (
-      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? "padding": "height"}>
-        <ScrollView contentContainerStyle={{flexGrow: 1, width: Dimensions.get("screen").width}} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity
-            onPress={() => onContactPicked(item)}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              marginHorizontal: 10,
-            }}
-          >
-            {item.imageAvailable && item.image ? (
-              <Image
-                source={item.image}
-                style={{ width: 64, height: 64, borderRadius: 32 }}
-              />
-            ) : (
-              <View
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: Colors.LIGHT_GRAY,
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
-                }}
-              >
-                <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
-              </View>
-            )}
-            <Text style={{ marginTop: 8, width: 84, textAlign: "center" }}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-          </ScrollView>
-      </KeyboardAvoidingView>
+      <View style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start', marginRight: 8}}>
+        <TouchableOpacity
+          onPress={() => onContactPicked(item)}
+          style={{
+            display: "flex",
+            alignSelf: 'stretch',
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            marginHorizontal: 10,
+            paddingHorizontal: 8,
+            paddingVertical: 12,
+          }}
+        >
+          {item.imageAvailable && item.image ? (
+            <Image
+              source={item.image}
+              style={{ width: 64, height: 64, borderRadius: 32 }}
+            />
+          ) : (
+            <View
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: Colors.LIGHT_GRAY,
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+              }}
+            >
+              <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
+            </View>
+          )}
+          <Text style={{ marginTop: 8, width: 84, textAlign: "center" }}>
+            {item.name}
+          </Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
   return (
-    <LinearGradient
-      style={styles.container}
-      colors={[Colors.LIGHT_GRAY, Colors.WHITE]}
-      locations={[0, 0.5]}
-    >
+    <LinearGradient style={styles.container} colors={[Colors.LIGHT_GRAY, Colors.WHITE]} locations={[0, 0.7]} >
+
       <StatusBar barStyle="dark-content" />
-      <View
-        style={{
-          flex: 0.25,
-          justifyContent: "flex-end",
-          alignItems: "center",
-          width: "100%",
-        }}
-      >
+      
+      <View style={{ display: 'flex', justifyContent: "flex-end", alignItems: "center", width: "100%" }} >
         <Text style={styles.amountLegend}>
           {capitalize(i18n.t("amount_to_send"))}:{" "}
           {formatCurrency(amount || "0", 2, { prefix: "$" })}
         </Text>
       </View>
+
       <InvitationSender
         show={!!showInvitation}
         contact={showInvitation}
@@ -241,63 +224,73 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
           setShowInvitation(null);
         }}
       />
-      <TouchableWithoutFeedback
-        onPress={Keyboard.dismiss}
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-      >
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <View
-            style={[
-              styles.inputTextContainer,
-              { borderBottomColor: hasFocus ? "#347AF0" : "#CFD2D8" },
-            ]}
-          >
-            <TextInput
-              multiline
-              value={recipientInput}
-              onChangeText={(text: string) => {
-                setRecipientInput(text);
-              }}
-              style={styles.inputField}
-              onFocus={() => setFocus(true)}
-              onBlur={() => setFocus(false)}
-            />
-            <TouchableOpacity onPress={onQRScan}>
-              <MaterialCommunityIcons
-                name="qrcode-scan"
-                size={24}
-                color="black"
-                style={styles.inputIcon}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableWithoutFeedback>
 
-      {contacts && (
-        <View
-          style={{
-            flex: 0.75,
-            justifyContent: "flex-start",
-            alignItems: "center",
-          }}
-        >
-          <FlatList
-            horizontal={true}
-            data={contacts.data}
-            renderItem={renderContact}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{width: '100%', flex: 1, justifyContent: 'flex-end'}} >
+          <View style={{ flex: 1, justifyContent: "flex-end", paddingBottom: 20 }}>
+              <ScrollView contentContainerStyle={{flexGrow: 1, justifyContent: 'flex-end'}} keyboardShouldPersistTaps="handled">
+                <View style={[ styles.inputTextContainer, { borderBottomColor: hasFocus ? "#347AF0" : "#CFD2D8" }]} >
+                  <TextInput
+                    multiline
+                    value={recipientInput}
+                    onChangeText={(text: string) => {
+                      setRecipientInput(text);
+                    }}
+                    onKeyPress={() => { setDisabled(true); setRecipientAddress(undefined)}}
+                    style={ethers.utils.isAddress(recipientInput) ? styles.inputFieldAddress : styles.inputField}
+                    onFocus={() => setFocus(true)}
+                    onBlur={() => setFocus(false)}
+                  />
+
+                  <TouchableOpacity onPress={onQRScan}>
+                    <MaterialCommunityIcons
+                      name="qrcode-scan"
+                      size={24}
+                      color="black"
+                      style={styles.inputIcon}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+          </View>
+
+          <View style={{ display: 'flex', justifyContent: "center", alignItems: "center", backgroundColor: Colors.OFF_WHITE, borderRadius: 8, minHeight: 150}}>
+
+            {contacts && contacts.data.length === 0 && ( 
+              <View style={{display: 'flex', alignItems: 'center'}}>
+                <MaterialCommunityIcons name="account-off" size={42} color={Colors.DARK_GRAY} style={styles.emptyIcon} />
+                <Text style={styles.emptyLegend}>{titleize(i18n.t("recipient_not_found"))}</Text>
+              </View>
+            )}
+
+            {contacts && contacts.data.length > 0 && (
+              <FlatList
+                keyboardShouldPersistTaps="handled"
+                style={{padding: 12, borderRadius: 12}}
+                horizontal={true}
+                data={contacts.data}
+                renderItem={renderContact}
+              />
+            )}
+
+            {!contacts && (
+              <View style={{display: 'flex', alignItems: 'center'}}>
+                <MaterialCommunityIcons name="account-heart" size={42} color={Colors.DARK_GRAY} style={styles.emptyIcon} />
+                <Text style={styles.emptyLegend}>{titleize(i18n.t("recent_recipients"))}</Text>
+              </View>
+            )}
+
+          </View>
+
+        <View style={{ flex: 3, justifyContent: 'flex-start' }}>
+          <Button
+            loading={isLoading}
+            title={titleize(i18n.t("continue"))}
+            onPress={onContinue}
+            category="primary"
+            disabled={disabled}
           />
         </View>
-      )}
-
-      <View style={{ flex: 2 }}>
-        <Button
-          title={titleize(i18n.t("continue"))}
-          onPress={onContinue}
-          category="primary"
-          disabled={disabled}
-        />
-      </View>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 };
@@ -324,7 +317,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: "Montserrat-Bold",
     fontSize: 18,
-    padding: 8,
+    marginRight: 10,
+    borderTopRightRadius: 3,
+    borderTopLeftRadius: 3,
+  },
+
+  inputFieldAddress: {
+    flex: 1,
+    fontFamily: "Montserrat-Bold",
+    fontSize: 14,
+    textAlign: 'center',
+    padding: 0,
+    marginRight: 10,
     borderTopRightRadius: 3,
     borderTopLeftRadius: 3,
   },
@@ -338,6 +342,16 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: "#3783F5",
   },
+
+  emptyIcon: {
+    marginBottom: 8,
+  },
+
+  emptyLegend: {
+    fontFamily: "Montserrat-Bold",
+    fontSize: 18,
+    color: Colors.DARK_GRAY,
+  }
 });
 
 export default EnterRecipient;

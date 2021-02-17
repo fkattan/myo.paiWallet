@@ -32,6 +32,8 @@ export default {
   enter_amount: "ingrese monto",
   available: "disponible",
   enter_recipient: "agregar destinatario",
+  recent_recipients: "contactos recientes",
+  recipient_not_found: "sin resultados",
 
   choose_recipient: "ingrese destinatario",
   amount_to_send: "monto",

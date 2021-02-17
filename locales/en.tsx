@@ -33,6 +33,8 @@ export default {
   enter_amount: "enter amount",
   available: "available",
   enter_recipient: "enter recipient",
+  recent_recipients: "recent recipients",
+  recipient_not_found: "not found",
 
   choose_recipient: "choose recipient",
   amount_to_send: "sending",
