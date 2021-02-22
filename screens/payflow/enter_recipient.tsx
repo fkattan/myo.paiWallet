@@ -19,7 +19,6 @@ import {
 import * as Contacts from "expo-contacts";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
-import {Feather} from '@expo/vector-icons';
 
 import { getPotentialFullNumbers } from "../../utils/phone_helpers";
 import { findDataForNumbers } from "../../services/data_service";

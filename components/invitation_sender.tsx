@@ -1,8 +1,7 @@
-import React, { useState, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   GestureResponderEvent,
   Modal,
@@ -10,9 +9,7 @@ import {
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import * as Colors from "../colors";
-import { capitalize, titleize } from "../utils/text_helpers";
-import PhoneInput from "react-native-phone-number-input";
-import * as Localization from "expo-localization";
+import { capitalize } from "../utils/text_helpers";
 import i18n from "i18n-js";
 
 type InvitationSenderProps = {

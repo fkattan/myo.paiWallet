@@ -13,9 +13,11 @@ import { useAppState } from "../../app_context";
 import { Recipient, TransactionStatus, usePayflowContext } from "./payflow_context";
 
 import { ethers } from "ethers";
-import { L2_PAI_ADDRESS } from "../../constants";
+import { L2_ACH_ADDRESS, L2_PAI_ADDRESS } from "../../constants";
 import L2_PAI from '../../reference/L2_PAI.json';
-import eip712Sign from "../../utils/eip712_sign";
+import L2_ACH from '../../reference/L2_PAI.json';
+
+import { signPermit, signTransfer }  from "../../utils/eip712_sign";
 
 import {titleize, capitalize} from '../../utils/text_helpers';
 import { formatCurrency, toWei } from "../../utils/currency_helpers";
@@ -30,7 +32,7 @@ type EnterRecipientProps = {
 }
 
 // const RELAYER_URL =  "https://myo-backend-55739.uk.r.appspot.com";
-const RELAYER_URL = "http://192.168.7.73:8080";
+const RELAYER_URL = "http://192.168.7.73:4000/api";
 
 const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
@@ -144,14 +146,15 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
         try {
             const provider = wallet.provider;
-            const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, wallet);
+            const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, provider);
+            const ach = new ethers.Contract(L2_ACH_ADDRESS, L2_ACH.abi, provider);
             setProgress(0.30);
 
             const signerAddress = await wallet.getAddress();
             const chainId = await wallet.getChainId();
             const {timestamp} = await provider.getBlock(await provider.getBlockNumber());
-            const nonce = await wallet.getTransactionCount();
-            const metaNonce = await pai.nonces(signerAddress);
+            const paiNonce = await pai.nonces(signerAddress);
+            const achNonce = await ach.nonces(signerAddress);
 
             // TX valid for 60 seconds. if it's not sent before that it will be expired. 
             const deadline:string = ((timestamp + 60)).toString();
@@ -159,18 +162,18 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
             setProgress(0.40);
 
             // const rsvSignature = await eip712Sign(chainId, signerAddress, recipient, weiAmount, metaNonce.toString(), deadline, wallet);
-            const signature = await eip712Sign(chainId, signerAddress, recipient.address, weiAmount, metaNonce.toString(), deadline, wallet);
+            const permitSignature = await signPermit(chainId, signerAddress, L2_ACH_ADDRESS, weiAmount, paiNonce.toString(), deadline, wallet);
+            const transferSignature = await signTransfer(chainId, signerAddress, recipient.address, weiAmount, "0", achNonce.toString(), deadline, L2_ACH_ADDRESS, wallet );
             setProgress(0.50);
 
-            if(signature === undefined) {
+            if(permitSignature === undefined) {
                 console.log("Something went wrong; rsvSignature undefined");
                 return;
             }
 
             const controller = new AbortController();
-            const fetchTimeout = setTimeout(() => controller.abort(), 10000); // 10s
+            const fetchTimeout = setTimeout(() => controller.abort(), 35000); // 15s
 
-            //TODO: Add Timeout and error page
             console.log("Sending Request to relayer", RELAYER_URL);
             const response = await fetch(RELAYER_URL, {
                 signal: controller.signal,
@@ -182,13 +185,18 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 body: JSON.stringify({
                     signerAddress, 
                     recipient: recipient.address,
+                    spender: L2_ACH_ADDRESS,
                     wei: weiAmount,
+                    fee: "0",
+                    nonce: achNonce.toString(),
                     deadline, 
-                    signature
+                    permitSignature,
+                    transferSignature
                 })
             });
+
             clearTimeout(fetchTimeout);
-            console.log("Relayer Response", response);
+            console.log(JSON.stringify(response, null, 4));
 
             if(response.ok) {
                 setProgress(1);
@@ -200,28 +208,9 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 transitionToError();
             }
 
-
-            // const tx = await pai.permit(signerAddress, recipient, weiAmount, deadline, rsvSignature.v, rsvSignature.r, rsvSignature.s, {nonce, gasLimit: 90000, gasPrice: 2000000000})
-            // .then(async (response:ethers.providers.TransactionResponse) => {
-
-            //     setProgress(0.75);
-            //     provider.waitForTransaction(response.hash)
-            //     .then((receipt:ethers.providers.TransactionReceipt) => {
-            //         if(receipt.status !== 1) {
-            //             // Reverted
-            //             dispatch({type: 'error', error: `Reverted [status:${receipt.status}] hash: ${receipt.transactionHash}`});
-            //             transitionToError();
-            //         } else {
-            //             setProgress(1);
-            //             transitionToSuccess();
-            //             dispatch({type: 'set_tx_receipt', payload: receipt});
-            //         }
-            //     });
-            // })
-            // .catch((error:any) => console.log(error))
-
         } catch(e) {
-            console.error(e);
+            console.log("Error Processing Payment");
+            console.log(JSON.stringify(e));
             transitionToError();
         }
     };

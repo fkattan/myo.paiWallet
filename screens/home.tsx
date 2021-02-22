@@ -103,7 +103,6 @@ const Home = ({navigation}:HomeProps) => {
 
     }, [address])
 
- 
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content"/>

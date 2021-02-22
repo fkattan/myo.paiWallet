@@ -17,7 +17,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "pai.finance"
     },
     "web": {
       "favicon": "./assets/favicon.png"

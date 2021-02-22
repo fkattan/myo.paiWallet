@@ -43,20 +43,16 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
 
         (async () => {
             const block:ethers.providers.Block = await provider.getBlock(log.blockNumber);
-            console.log("Block: ", block);
             setBlock(block);
 
             const item = await AsyncStorage.getItem(log.transactionHash);
             if(item !== null) {
-                // const txLocalInfo = JSON.parse(item);
                 setDescription(item)
             }
         })();
 
-        console.log("TX History Event Item:", log);
-
-        // const ABI = [ "event Transfer(address indexed from, address indexed to, uint256 value)" ];
-        const ABI = [ "event Approval(address indexed owner, address indexed spender, uint256 value)" ];
+        const ABI = [ "event Transfer(address indexed from, address indexed to, uint256 value)" ];
+        // const ABI = [ "event Approval(address indexed owner, address indexed spender, uint256 value)" ];
         const iface = new ethers.utils.Interface(ABI);
         const event:ethers.utils.LogDescription = iface.parseLog(log);
         setDirection(event.args[1] === wallet?.address ? DirectionEnum.IN : DirectionEnum.OUT)
@@ -68,8 +64,10 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
         setTxDate(new Date(block.timestamp * 1000));
     }, [block])
 
+    if(amount?.eq(0)) return null;
+
     return(
-        <View style={itemContainerStyles} key={"TrasferItem_" + log.transactionHash}>
+        <View style={itemContainerStyles}>
             <View style={{display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: direction === DirectionEnum.OUT ? Colors.PRIMARY_BLUE_TRIADIC_DANGER : Colors.PRIMARY_BLUE_TRIADIC_SUCCESS, marginRight: 8}}>
                 <Feather name={direction === DirectionEnum.OUT ? "arrow-up-left" : "arrow-down-right"} size={15} color={direction === DirectionEnum.OUT ? Colors.PRIMARY_BLUE_TRIADIC_DANGER : Colors.PRIMARY_BLUE_TRIADIC_SUCCESS}/>
             </View>

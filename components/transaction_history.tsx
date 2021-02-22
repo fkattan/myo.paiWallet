@@ -33,19 +33,17 @@ const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
         const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
         const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider)
 
-        pai.on("Approval", (from:string, to:string, amount:ethers.BigNumber, event: ethers.providers.EventType) => {
-            console.log("Approved Event Caught", from, to, amount.toString(), new Date());
+        pai.on("Transfer", (from:string, to:string, amount:ethers.BigNumber, event: ethers.providers.EventType) => {
+            console.log("Transfer Event Caught", from, to, amount.toString(), new Date());
             console.log("Event: ", event);
 
             if(transactions === undefined) return;
 
             // sortByBlockTimestamp(transactions.concat(event), true)
-
         });
 
-
         return () => {
-            pai.removeAllListeners("Approval");
+            pai.removeAllListeners("Transfer");
         }
 
     }, []);
@@ -108,8 +106,7 @@ const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
                 fromBlock: latestBlockNumber - 10000,
                 toBlock: latestBlockNumber,
                 topics: [
-                    ethers.utils.id("Approval(address,address,uint256)")
-        //         ethers.utils.id("TransferTo(address,uint256)")
+                    ethers.utils.id("Transfer(address,address,uint256)")
                 ]
             }
         }
@@ -132,6 +129,7 @@ const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
         setRefreshing(false);
 
         return data;
+        // return data.filter((val, idx, self) => self.findIndex(t => (t.transactionHash === val.transactionHash)) === idx);
     }
     
 
@@ -146,7 +144,7 @@ const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
                     tintColor="#FFF"
                     titleColor="#FFF"/>
             }
-            keyExtractor={(item) => item.transactionHash}
+            keyExtractor={(item) => item.transactionHash + ":" + item.logIndex}
             renderItem={({item}) => {
                 return (<TransferEventListItem log={item} itemContainerStyles={styles.item} textStyles={styles.itemText} />);
             }} 
