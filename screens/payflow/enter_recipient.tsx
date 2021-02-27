@@ -1,27 +1,20 @@
-import React, { ReactElement, useEffect, useState } from "react";
-import * as Cellular from "expo-cellular";
-import "@ethersproject/shims";
+import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+
 import { LinearGradient } from "expo-linear-gradient";
 import {
   StyleSheet,
   View,
   Text,
   StatusBar,
-  Image,
-  FlatList,
   TextInput,
   TouchableOpacity,
-  ListRenderItem,
   KeyboardAvoidingView,
   ScrollView
 } from "react-native";
 import * as Contacts from "expo-contacts";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
 
-import { getPotentialFullNumbers } from "../../utils/phone_helpers";
-import { findDataForNumbers } from "../../services/data_service";
 import { formatCurrency } from "../../utils/currency_helpers";
 
 import Button from "../../components/button";
@@ -32,6 +25,8 @@ import InvitationSender from "../../components/invitation_sender";
 
 import * as Colors from "../../colors";
 import { Platform } from "react-native";
+
+import ContactList from "../../components/contact_list";
 
 type EnterRecipientProps = {
   route: any;
@@ -50,24 +45,10 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   const [hasFocus, setFocus] = useState<boolean>(false);
   const [showInvitation, setShowInvitation] = useState<Contacts.Contact | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const [useContactsGranted, setUseContactsGranted] = useState<boolean>(false);
-  const [contacts, setContacts] = useState<Contacts.ContactResponse>();
-
   const [searchQuery, setSearchQuery] = useState<string|undefined>(undefined);
 
   const [payflowState, payflowDispatch] = usePayflowContext();
   const { amount, recipient } = payflowState;
-
-  useEffect(() => {
-    Contacts.requestPermissionsAsync().then(
-      (response: Contacts.PermissionResponse) => {
-        if (response.status === Contacts.PermissionStatus.GRANTED) {
-          setUseContactsGranted(true);
-        }
-      }
-    );
-  }, []);
 
   useEffect(() => {
     if (recipient === undefined) return;
@@ -77,35 +58,10 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
     setDisabled(false);
   }, [recipient]);
 
+  // If input text is not an address, update search query to find posible name matches
   useEffect(() => {
-    if (!recipientInput) return; 
-
-    if(!ethers.utils.isAddress(recipientInput)) {
-      setSearchQuery(recipientInput)
-    } else {
-      setSearchQuery(undefined);
-    }
+    setSearchQuery(ethers.utils.isAddress(recipientInput) ? undefined : recipientInput);
   }, [recipientInput]);
-
-  useEffect(() => {
-    if (!useContactsGranted) return;
-    
-    if (searchQuery && searchQuery.length >= 3) {
-      Contacts.getContactsAsync({
-        name: searchQuery,
-        fields: [
-          Contacts.Fields.Name,
-          Contacts.Fields.PhoneNumbers,
-          Contacts.Fields.ImageAvailable,
-          Contacts.Fields.Image,
-        ],
-      }).then((value: Contacts.ContactResponse) => {
-        setContacts(value);
-      });
-    } else {
-      setContacts(undefined);
-    }
-  }, [searchQuery, useContactsGranted]);
 
   const onContinue = () => {
     if(!recipientAddress || !ethers.utils.isAddress(recipientAddress)) return;
@@ -121,84 +77,15 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
     navigation.navigate("scan");
   };
 
-  const onContactPicked = (item: Contacts.Contact) => {
-    if(item.phoneNumbers === undefined) return; 
-
-    setIsLoading(true);
-
-    const numbers = getPotentialFullNumbers(
-      item.phoneNumbers.map((n) => n.digits),
-      Cellular.isoCountryCode
-    );
-
-    //given the numbers, we have to find one with a wallet address mapping
-    findDataForNumbers(numbers)
-    .then((matches) => {
-      if (!matches || !matches.length) {
-        //no  match found...should invite  the user
-        setShowInvitation(item);
-      } else if (matches.length > 1) {
-        //more  than one match is found, we should ask  the user to choose ??
-        //let's display a modal with two
-        alert("More than one match is found.");
-      } else {
-        //clean  case...just one match...safe to continue
-        //TODO: decide  on what  to  do  if  the name   in  the addressbook doesn't match
-        //what is found associated  with the  wallet address
-        setContacts({ data: [item], hasPreviousPage: false, hasNextPage: false });
-        setRecipientAddress(matches[0].walletAddress);
-        setRecipientInput(item.name);
+  const onContact = (contact:Contacts.Contact, address:string) => {
+        setRecipientAddress(address);
+        setRecipientInput(contact.name);
         setDisabled(false);
-      }
-    })
-    .finally(() => setIsLoading(false));
-  };
+  }
 
-  const renderContact: ListRenderItem<Contacts.Contact> = ({ item, }): ReactElement => {
-    if (!item || !item.phoneNumbers) return <View />;
-
-    return (
-      <View style={{display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start', marginRight: 8}}>
-        <TouchableOpacity
-          onPress={() => onContactPicked(item)}
-          style={{
-            display: "flex",
-            alignSelf: 'stretch',
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "flex-start",
-            marginHorizontal: 10,
-            paddingHorizontal: 8,
-            paddingVertical: 12,
-          }}
-        >
-          {item.imageAvailable && item.image ? (
-            <Image
-              source={item.image}
-              style={{ width: 64, height: 64, borderRadius: 32 }}
-            />
-          ) : (
-            <View
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: Colors.LIGHT_GRAY,
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-              }}
-            >
-              <Ionicons name="ios-person" size={48} color={Colors.MEDIUM_GRAY} />
-            </View>
-          )}
-          <Text style={{ marginTop: 8, width: 84, textAlign: "center" }}>
-            {item.name}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  const onContactNotFound = (contact:Contacts.Contact) => {
+    console.log("TODO: Show Invitation");
+  }
 
   return (
     <LinearGradient style={styles.container} colors={[Colors.LIGHT_GRAY, Colors.WHITE]} locations={[0, 0.7]} >
@@ -250,31 +137,11 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
           </View>
 
           <View style={{ display: 'flex', justifyContent: "center", alignItems: "center", backgroundColor: Colors.OFF_WHITE, borderRadius: 8, minHeight: 150}}>
-
-            {contacts && contacts.data.length === 0 && ( 
-              <View style={{display: 'flex', alignItems: 'center'}}>
-                <MaterialCommunityIcons name="account-off" size={42} color={Colors.DARK_GRAY} style={styles.emptyIcon} />
-                <Text style={styles.emptyLegend}>{titleize(i18n.t("recipient_not_found"))}</Text>
-              </View>
-            )}
-
-            {contacts && contacts.data.length > 0 && (
-              <FlatList
-                keyboardShouldPersistTaps="handled"
-                style={{padding: 12, borderRadius: 12}}
-                horizontal={true}
-                data={contacts.data}
-                renderItem={renderContact}
-              />
-            )}
-
-            {!contacts && (
-              <View style={{display: 'flex', alignItems: 'center'}}>
-                <MaterialCommunityIcons name="account-heart" size={42} color={Colors.DARK_GRAY} style={styles.emptyIcon} />
-                <Text style={styles.emptyLegend}>{titleize(i18n.t("recent_recipients"))}</Text>
-              </View>
-            )}
-
+            <ContactList 
+              searchQuery={searchQuery} 
+              onContact={onContact} 
+              onContactNotFound={onContactNotFound}
+              onLoading={setIsLoading} />
           </View>
 
         <View style={{ flex: 3, justifyContent: 'flex-start' }}>
@@ -339,15 +206,6 @@ const styles = StyleSheet.create({
     color: "#3783F5",
   },
 
-  emptyIcon: {
-    marginBottom: 8,
-  },
-
-  emptyLegend: {
-    fontFamily: "Montserrat-Bold",
-    fontSize: 18,
-    color: Colors.DARK_GRAY,
-  }
 });
 
 export default EnterRecipient;

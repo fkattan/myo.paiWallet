@@ -5,11 +5,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProgressBar from 'react-native-progress/Bar'; 
 import { LinearGradient } from "expo-linear-gradient";
 import Button from '../../components/button';
-import { StyleSheet, View, Text, StatusBar, Animated } from "react-native";
+import { StyleSheet, View, Text, StatusBar, Animated, ActivityIndicator } from "react-native";
 
 import { FontAwesome } from '@expo/vector-icons'; 
 
-import { useAppState } from "../../app_context";
+import { useAppDispatch, useAppState } from "../../app_context";
 import { Recipient, TransactionStatus, usePayflowContext } from "./payflow_context";
 
 import { ethers } from "ethers";
@@ -31,8 +31,8 @@ type EnterRecipientProps = {
     navigation:any
 }
 
-// const RELAYER_URL =  "https://myo-backend-55739.uk.r.appspot.com";
-const RELAYER_URL = "http://192.168.7.73:4000/api";
+// const RELAYER_URL = "http://192.168.7.73:4000/api";
+const RELAYER_URL = "https://myo-relayer.vercel.app/api";
 
 const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
@@ -145,6 +145,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
         setProgress(0.25);
 
         try {
+
             const provider = wallet.provider;
             const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, provider);
             const ach = new ethers.Contract(L2_ACH_ADDRESS, L2_ACH.abi, provider);
@@ -171,10 +172,10 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 return;
             }
 
+            // Timeout fetch request
             const controller = new AbortController();
             const fetchTimeout = setTimeout(() => controller.abort(), 35000); // 15s
 
-            console.log("Sending Request to relayer", RELAYER_URL);
             const response = await fetch(RELAYER_URL, {
                 signal: controller.signal,
                 method: 'POST',
@@ -196,16 +197,20 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
             });
 
             clearTimeout(fetchTimeout);
-            console.log(JSON.stringify(response, null, 4));
 
             if(response.ok) {
-                setProgress(1);
-                transitionToSuccess();
-                // TODO: Set payflow state with appropiate response
-                // dispatch({type: 'set_tx_receipt', payload: response});
+
+                response.json()
+                .then(jsonData => {
+                    dispatch({type: 'set_tx_receipt', payload: jsonData});
+                })
+                .finally(() => {
+                    setProgress(1);
+                    transitionToSuccess();
+                });
             } else {
                 dispatch({type: 'error', error: `Reverted [status:${response.status}]`});
-                transitionToError();
+                // transitionToError();
             }
 
         } catch(e) {
@@ -266,6 +271,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
                     {txStatus === TransactionStatus.IN_PROGRESS && (
                         <Animated.View style={{flex: 2, alignItems: 'center', justifyContent: 'center', opacity: inProgressOpacity}}>
+                            <ActivityIndicator animating={true} style={{marginBottom: 12}} />
                             <ProgressBar progress={progress} color={Colors.PRIMARY_BLUE} borderRadius={0} height={2} width={200} borderColor={Colors.LIGHT_GRAY} />
                         </Animated.View>
                     )}

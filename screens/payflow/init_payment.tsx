@@ -62,8 +62,6 @@ const Pay = ({route, navigation}:PayProps) => {
             ]
         };
 
-        // console.log("Payload", _TypedDataEncoder.getPayload(domain, types, values));
-
         const signature = await walletProvider._signTypedData(domain, types, values);
         const rsvSignature = ethers.utils.splitSignature(signature);
 
@@ -71,7 +69,6 @@ const Pay = ({route, navigation}:PayProps) => {
     }
 
     const onPayPress = async () => {
-        console.log("onPayPress", wallet === undefined, amount)
         if(!wallet || !amount) throw "Invalid Signer or Payment Amount";
 
         setLoading(true);

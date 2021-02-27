@@ -9,7 +9,7 @@
     "typechain": "typechain --target truffle-v5 './reference/**/*.json'"
   },
   "dependencies": {
-    "@ethersproject/shims": "^5.0.6",
+    "@ethersproject/shims": "^5.0.10",
     "@expo/react-native-action-sheet": "^3.8.0",
     "@react-native-async-storage/async-storage": "^1.13.2",
     "@react-native-community/clipboard": "^1.5.1",
@@ -18,7 +18,7 @@
     "@react-navigation/stack": "^5.9.3",
     "@types/i18n-js": "^3.0.3",
     "@unimodules/core": "~5.5.1",
-    "ethers": "5.0.24",
+    "ethers": "5.0.31",
     "expo": "~39.0.2",
     "expo-barcode-scanner": "~9.0.0",
     "expo-cellular": "~2.3.0",

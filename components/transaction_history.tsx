@@ -12,9 +12,9 @@ import TransferEventListItem from './transfer_event_list_item';
 
 import i18n from 'i18n-js';
 import {titleize} from '../utils/text_helpers';
+import { useAppContext } from '../app_context';
 
 type  TransactionHistoryProps = {
-    address?: string,
     onRefresh?: Function
 }
 
@@ -23,115 +23,74 @@ type TxHistoryItem = {
     block: ethers.providers.Block
 }
 
-const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
-    const [transactions, setTransactions] = useState<Array<ethers.providers.Log>>();
+const TransactionHistory = ({onRefresh}:TransactionHistoryProps) => {
+    const [transactions, setTransactions] = useState<ethers.Event[]>();
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
+
+    const [state, dispatch] = useAppContext();
 
     useEffect(() => {
 
         const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
         const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider)
 
-        pai.on("Transfer", (from:string, to:string, amount:ethers.BigNumber, event: ethers.providers.EventType) => {
-            console.log("Transfer Event Caught", from, to, amount.toString(), new Date());
-            console.log("Event: ", event);
+        const transferFromMe = pai.filters.Transfer(state.wallet?.address);
+        const transferToMe = pai.filters.Transfer(null, state.wallet?.address);
 
-            if(transactions === undefined) return;
+        const onBalanceChange:()=>void = () => {
+            getTransactions(state.wallet?.address).then(tx => {
+                setTransactions(tx);
+            });
+        };
 
-            // sortByBlockTimestamp(transactions.concat(event), true)
-        });
+        pai.on(transferFromMe, onBalanceChange); 
+        pai.on(transferToMe, onBalanceChange);
 
         return () => {
-            pai.removeAllListeners("Transfer");
+            pai.off(transferFromMe, onBalanceChange);
+            pai.off(transferToMe, onBalanceChange);
         }
 
     }, []);
 
 
     useEffect(() => {
-        if(address === undefined) return; 
 
-        getTransactions()
-        .then((data:Array<ethers.providers.Log>) => {
-
-            // Augment Log with Block info, and reverse sort 
-            augmentLogsWithBlockInfo(data)
-            .then((data => {
-                setTransactions(
-                    data.sort((a:TxHistoryItem, b:TxHistoryItem):number => {
-                        return b.block.timestamp - a.block.timestamp;
-                    })
-                    .map((a:TxHistoryItem) => {
-                        return a.log
-                    })
-                );
-            }));
+        getTransactions(state.wallet?.address)
+        .then((data:Array<ethers.Event>) => {
+            setTransactions(data);
         })
         .catch((error:any) => { throw error });
+        
+    }, [state.wallet])
 
 
-    }, [address])
+    const getTransactions = async (address:string|undefined):Promise<ethers.Event[]> => {
 
-    const augmentLogsWithBlockInfo = async (data:Array<ethers.providers.Log>) => {
-
-        const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-
-        return Promise.all(data.map(async (log:ethers.providers.Log) => {
-            const block = await provider.getBlock(log.blockNumber);
-            return {log, block}
-        }));
-    }
-
-    const sortByBlockTimestamp = (logs: Array<ethers.providers.Log>, reverse:boolean):Promise<void|Array<ethers.providers.Log>> => {
-
-        return augmentLogsWithBlockInfo(logs)
-        .then(augmentedLogs => {
-            augmentedLogs.sort((a:TxHistoryItem, b:TxHistoryItem):number => {
-                return reverse ? (b.block.timestamp - a.block.timestamp) : (a.block.timestamp - b.block.timestamp);
-            })
-            .map((a:TxHistoryItem) => {
-                return a.log
-            })
-        })
-    }
-
-    const getTransactions = async ():Promise<Array<ethers.providers.Log>> => {
-
-        console.log("getTransactions Called")
-
-        const getFilter = (latestBlockNumber:number) => {
-            return {
-                address: L2_PAI_ADDRESS,
-                fromBlock: latestBlockNumber - 10000,
-                toBlock: latestBlockNumber,
-                topics: [
-                    ethers.utils.id("Transfer(address,address,uint256)")
-                ]
-            }
-        }
+        if(!address || !ethers.utils.isAddress(address)) return []; 
 
         const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-
-        let blockHeight = await provider.getBlockNumber();
+        const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
 
         setRefreshing(true);
 
-        let data:Array<ethers.providers.Log> = [];
-        for(let i = 1; i <= 3; i++) {
-            const result:void|Array<ethers.providers.Log> = await provider.getLogs(getFilter(blockHeight))
-                .catch((e) => console.error(e))
+        let data:ethers.Event[] = [];
+        let blockHeight = await provider.getBlockNumber();
 
-            if(result) data = data.concat(result);
+        for(let i = 1; i <= 3; i++) {
+
+            const fromMe = await pai.queryFilter(pai.filters.Transfer(address), blockHeight - 10000, blockHeight);
+            const toMe = await pai.queryFilter(pai.filters.Transfer(null, address), blockHeight - 10000, blockHeight);
+
+            data = data.concat(fromMe).concat(toMe)
             blockHeight = blockHeight - 10000 - 1;
         }
 
         setRefreshing(false);
 
-        return data;
-        // return data.filter((val, idx, self) => self.findIndex(t => (t.transactionHash === val.transactionHash)) === idx);
+        return data.sort((a:ethers.Event, b:ethers.Event) => b.blockNumber - a.blockNumber);
     }
-    
 
     return (
         <FlatList
@@ -139,7 +98,7 @@ const TransactionHistory = ({address, onRefresh}:TransactionHistoryProps) => {
             refreshControl={
                 <RefreshControl
                     refreshing={refreshing}
-                    onRefresh={getTransactions.bind(this)}
+                    onRefresh={() => getTransactions(state.wallet?.address)}
                     title=""
                     tintColor="#FFF"
                     titleColor="#FFF"/>

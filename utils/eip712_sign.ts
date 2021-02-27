@@ -38,22 +38,8 @@ const signPermit = async (
     ],
   };
 
-  console.log("Domain:", domain);
-  console.log("Types:", types);
-  console.log("Values:", values);
-
-  console.log(
-    "Hash",
-    ethers.utils._TypedDataEncoder.encode(domain, types, values)
-  );
-
   const signature = await wallet._signTypedData(domain, types, values);
-
-  console.log("Signature: ", signature);
   return signature;
-
-  // const rsvSignature = ethers.utils.splitSignature(signature);
-  // return rsvSignature;
 };
 
 const signTransfer = async (
@@ -98,20 +84,6 @@ const signTransfer = async (
       { name: "relayer", type: "address" },
     ],
   };
-
-  console.log("Domain:", domain);
-  console.log("Types:", types);
-  console.log("Values: ", values);
-
-  console.log("Domain Hash", ethers.utils._TypedDataEncoder.hashDomain(domain));
-  console.log(
-    "Typed Data Encoded",
-    ethers.utils._TypedDataEncoder.encode(domain, types, values)
-  );
-  console.log(
-    "Hash",
-    ethers.utils._TypedDataEncoder.hash(domain, types, values)
-  );
 
   const signature = await wallet._signTypedData(domain, types, values);
   return signature;

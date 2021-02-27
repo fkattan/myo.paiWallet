@@ -1,6 +1,8 @@
 import "@ethersproject/shims";
 import { ethers } from "ethers";
 import React from "react";
+import { Recipient } from "./screens/payflow/payflow_context";
+import { storeRecentContact } from "./services/data_service";
 
 export enum AuthState {
   "success",
@@ -19,6 +21,7 @@ export type AppError = {
   description: string;
 };
 
+
 export type ApplicationState = {
   auth: AuthState | undefined;
   provider: ethers.providers.JsonRpcProvider | undefined;
@@ -30,9 +33,10 @@ export type ApplicationState = {
   image: string | undefined;
   decimals: ethers.BigNumber | undefined;
   error: AppError | undefined;
+  recentReceivers: Array<Recipient>;
 };
 
-type AppAction =
+export type AppAction =
   | { type: "auth_success" }
   | { type: "auth_failure" }
   | { type: "set_decimals"; payload: ethers.BigNumber }
@@ -48,20 +52,20 @@ type AppAction =
   | { type: "clear_user_details"; payload: undefined }
   | { type: "set_profile_image"; payload: string }
   | { type: "clear_profile_image"; payload: undefined }
+  | { type: "add_recent_receiver"; payload: Recipient}
+  | { type: "clear_recent_receivers"; payload: undefined}
   | { type: "set_provider"; payload: ethers.providers.JsonRpcProvider }
   | { type: "set_wallet"; payload: ethers.Wallet }
   | { type: "error"; error: AppError | undefined };
 
-type Dispatch = (action: AppAction) => void;
+export type Dispatch = (action: AppAction) => void;
 
 type AppStateProviderProps = {
   children: React.ReactNode;
   state?: ApplicationState;
 };
 
-const ApplicationStateContext = React.createContext<
-  ApplicationState | undefined
->(undefined);
+const ApplicationStateContext = React.createContext<ApplicationState | undefined>(undefined);
 const AppDispatchContext = React.createContext<Dispatch | undefined>(undefined);
 
 function AppStateReducer(
@@ -112,6 +116,21 @@ function AppStateReducer(
         image: undefined,
       };
     }
+
+    case "add_recent_receiver": {
+      return {
+        ...state,
+        recentReceivers: state.recentReceivers.concat(action.payload)
+      }
+    }
+
+    case "clear_recent_receivers": {
+      return {
+        ...state,
+        recentReceivers: []
+      }
+    }
+
     case "set_decimals": {
       return { ...state, decimals: action.payload };
     }
@@ -144,6 +163,7 @@ const initialState: ApplicationState = {
   lastName: undefined,
   image: undefined,
   decimals: undefined,
+  recentReceivers: []
 };
 
 function AppProvider({ children, state }: AppStateProviderProps) {

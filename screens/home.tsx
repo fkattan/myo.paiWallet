@@ -11,7 +11,7 @@ import * as SecureStore from 'expo-secure-store';
 import "@ethersproject/shims"
 import {ethers} from 'ethers';
 
-import PAI from '../reference/PAI.json';
+import L2_PAI from '../reference/L2_PAI.json';
 import {L2_PROVIDER_URL, L2_PAI_ADDRESS} from '../constants';
 import generateMnemonic from '../utils/generate_mnemonic';
 
@@ -37,6 +37,7 @@ const Home = ({navigation}:HomeProps) => {
     const { wallet, balance, decimals } = state;
 
 
+
     useEffect(() => {
 
         // Try to recover Private Key from secure store; if it can't be recovered, 
@@ -46,6 +47,8 @@ const Home = ({navigation}:HomeProps) => {
 
             let pk = await SecureStore.getItemAsync("pai.privatekey");
             if(pk === null) {
+                
+                // Generate a new wallet
                 let mnemonic = await SecureStore.getItemAsync("pai.mnemonic");
                 if(mnemonic === null) mnemonic = await generateMnemonic();
 
@@ -85,10 +88,15 @@ const Home = ({navigation}:HomeProps) => {
     useEffect(() => {
         if(address === undefined) return; 
 
-        console.log("Address set to", address, new Date().getTime());
-        
         const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
-        const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider);
+        const pai = new ethers.Contract(L2_PAI_ADDRESS, L2_PAI.abi, provider);
+
+
+        const transferFromMe = pai.filters.Transfer(address);
+        const transferToMe = pai.filters.Transfer(null, address);
+
+        pai.on(transferFromMe, () => fetchBalance(pai));
+        pai.on(transferToMe, () => fetchBalance(pai));
 
         setLoading(true);
         Promise.all([
@@ -101,7 +109,17 @@ const Home = ({navigation}:HomeProps) => {
         .catch((error:any) => { throw error })
         .finally(() => setLoading(false));
 
+        return () => {
+            pai.off(transferToMe, fetchBalance);
+            pai.off(transferFromMe, fetchBalance);
+        }
+
     }, [address])
+
+    const fetchBalance = (pai:ethers.Contract) => {
+        pai.balanceOf(address)
+        .then((balance:ethers.BigNumber) => dispatch({type: "set_balance", payload: ethers.utils.formatUnits(balance, decimals)}))
+    }
 
     return (
       <View style={styles.container}>
@@ -130,7 +148,7 @@ const Home = ({navigation}:HomeProps) => {
             </View>
             <View style={[{flex: 3}, styles.transactionHistoryContainer]}>
                 <Text style={styles.transactionHistoryTitle}>{titleize(i18n.t("latest_transactions"))}</Text>
-                <TransactionHistory address={wallet?.address} />
+                <TransactionHistory />
             </View>
         </View>
       </View>

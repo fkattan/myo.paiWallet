@@ -18,7 +18,7 @@ import i18n from 'i18n-js';
 const MONTHS_3LETTER = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 
 type  TransferEventListItem = {
-    log: ethers.providers.Log,
+    log: ethers.Event,
     itemContainerStyles:any,
     textStyles?:any
 }
@@ -52,9 +52,9 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
         })();
 
         const ABI = [ "event Transfer(address indexed from, address indexed to, uint256 value)" ];
-        // const ABI = [ "event Approval(address indexed owner, address indexed spender, uint256 value)" ];
         const iface = new ethers.utils.Interface(ABI);
         const event:ethers.utils.LogDescription = iface.parseLog(log);
+
         setDirection(event.args[1] === wallet?.address ? DirectionEnum.IN : DirectionEnum.OUT)
         setAmount(event.args[2]);
     }, []);

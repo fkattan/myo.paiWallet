@@ -48,7 +48,6 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
   const loadPersonalData = async () => {
     const data = await readPersonalData();
 
-    console.log("PERSONAL DATA:", data);
     data.firstName &&
       dispatch({
         type: "set_user_details",

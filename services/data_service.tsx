@@ -2,6 +2,8 @@ import * as firebase from "firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ethers } from "ethers";
+import { Receiver } from "../app_context";
+import { Contacts } from "expo";
 
 /**
  * retrieves the personal data for the current user
@@ -63,7 +65,6 @@ export const storePersonalData = (
   },
   address: string
 ): void => {
-  console.log("-->storePersonalData");
   const hashedPhone = ethers.utils.keccak256(
     ethers.utils.toUtf8Bytes(data.phoneNumber)
   );
@@ -82,7 +83,7 @@ export const storePersonalData = (
         AsyncStorage.setItem("user.phone_number", data.phoneNumber);
       });
   } catch (error) {
-    console.log("FIREBASE DB ERROR:", error);
+      console.log("FIREBASE DB ERROR:", error);
   }
 };
 
@@ -93,7 +94,6 @@ export const storePersonalData = (
 export const removePersonalData = (phone: string | undefined): void => {
   if (phone === undefined) return;
 
-  console.log("-->removePersonalData");
   const hashedPhone = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(phone));
   try {
     firebase
@@ -109,3 +109,31 @@ export const removePersonalData = (phone: string | undefined): void => {
     console.log("FIREBASE DB ERROR:", error);
   }
 };
+
+
+export const storeRecentContact= (receiver:Contacts.Contact) => {
+  AsyncStorage.getItem("recent_contacts")
+  .then((value:string|null) => {
+
+    // if we do not have any contact stored, create new array.
+    const contacts:Array<Contacts.Contact> = value ? JSON.parse(value) : [];
+
+    // Remove from Array of Recent Contact if already there
+    const index = contacts.findIndex((v:Contacts.Contact) => v.ID === receiver.ID)
+    if(index !== -1) contacts.splice(index, 1);
+
+    // Add to begining of Array
+    contacts.unshift(receiver)
+
+    // Limit to last 5 contacts
+    if(contacts.length > 5) contacts.pop();
+
+    AsyncStorage.setItem("recent_contact", JSON.stringify(contacts))
+    .catch(error => console.warn("Can't store recent contacts", JSON.stringify(error)))
+  })
+};
+
+export const retrieveRecentContacts:()=>Promise<Array<Contacts.Contact>> = async () => {
+  return AsyncStorage.getItem('recent_contacts')
+  .then(value => value ? JSON.parse(value) : [])
+}
