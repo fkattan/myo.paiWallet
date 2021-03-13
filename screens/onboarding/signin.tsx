@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 
 import { StatusBar, View, Text, StyleSheet, Pressable, Image, ActivityIndicator} from 'react-native';
-import {AppErrorCodes, useAppContext} from '../../app_context';
+import {AppErrorCodes, AuthState, useAppContext} from '../../app_context';
 
 import { capitalize } from '../../utils/text_helpers';
 import i18n from 'i18n-js';
+
+import * as firebase from 'firebase';
 
 import * as Colors from '../../colors';
 
@@ -39,6 +41,20 @@ const SignIn = () => {
         });
 
     }, []);
+
+    useEffect(() => {
+
+        if(state.auth === AuthState.success) {
+            firebase.auth().signInAnonymously()
+            .then(() => {
+                console.log("Firebase Auth Success")
+            })
+            .catch((error) => {
+                console.error(error.code, error.message);
+            });
+        }
+
+    }, [state.auth])
 
     const handleSignIn = () => {
         LocalAuthentication.authenticateAsync({
