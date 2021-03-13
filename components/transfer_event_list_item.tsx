@@ -87,7 +87,6 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
                 setDescription(value.memo);
                 setRecipient(value.recipient);
                 return value.recipient.id;
-
             })
 
             // If we have an ID let's get the contact
@@ -140,7 +139,9 @@ const TransferEventListItem = ({log, itemContainerStyles, textStyles}:TransferEv
 
     const recipientDisplayName = (contact:Contacts.Contact|undefined, recipient:Recipient|undefined, address:string|undefined) => {
         if(contact) return contact.name;
+        console.log("Not Contact", recipient);
         if(recipient) return recipient.name || shortenAddress(recipient.address);
+        console.log("Not recipient", address);
         if(address && ethers.utils.isAddress(address)) return shortenAddress(address);
 
         return i18n.t("annonymous");

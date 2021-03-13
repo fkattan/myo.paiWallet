@@ -62,7 +62,16 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   // If input text is not an address, update search query to find posible name matches
   useEffect(() => {
     if(recipientInput === undefined) return; 
-    setSearchQuery(ethers.utils.isAddress(recipientInput) ? undefined : recipientInput);
+    
+    if(ethers.utils.isAddress(recipientInput)) {
+      setSearchQuery(undefined);
+      setDisabled(false);
+      setRecipientAddress(recipientInput);
+      return;
+    }
+
+    setSearchQuery(recipientInput);
+
   }, [recipientInput]);
 
   const onContinue = () => {
@@ -70,7 +79,8 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
 
     payflowDispatch({
       type: "set_recipient",
-      payload: { id: recipientId, name: recipientInput, address: recipientAddress },
+      payload: { id: recipientId, name: recipientId ? recipientInput : "",  address: recipientAddress },
+
     });
     navigation.navigate("enter_message");
   };
