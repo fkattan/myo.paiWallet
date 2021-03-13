@@ -42,8 +42,18 @@ const ContactList = ({searchQuery, onContact, onContactNotFound, onLoading}:Cont
     
     if(!searchQuery) {
         retrieveRecentContacts()
-        .then((v:Array<Contacts.Contact>) => {
-            setContacts({data: v, hasNextPage: false, hasPreviousPage: false});
+        .then((v:Array<Contacts.Contact>|undefined) => {
+            if(!v) return Promise.reject();
+
+            return Promise.all(
+              v.map((value:Contacts.Contact, index:number, arr:Contacts.Contact[]):Promise<Contacts.Contact|undefined> => {
+                return Contacts.getContactByIdAsync(value.id)
+              }).filter(item => item)
+            )
+            .then((contacts:(Contacts.Contact|undefined)[]) => {
+              setContacts({data: v, hasNextPage: false, hasPreviousPage: false});
+            })
+            .catch(() => setContacts(undefined));
         });
 
         return;

@@ -2,7 +2,6 @@ import "@ethersproject/shims";
 import { ethers } from "ethers";
 import React from "react";
 import { Recipient } from "./screens/payflow/payflow_context";
-import { storeRecentContact } from "./services/data_service";
 
 export enum AuthState {
   "success",
@@ -52,7 +51,7 @@ export type AppAction =
   | { type: "clear_user_details"; payload: undefined }
   | { type: "set_profile_image"; payload: string }
   | { type: "clear_profile_image"; payload: undefined }
-  | { type: "add_recent_receiver"; payload: Recipient}
+  | { type: "set_recent_receivers"; payload: Recipient[]}
   | { type: "clear_recent_receivers"; payload: undefined}
   | { type: "set_provider"; payload: ethers.providers.JsonRpcProvider }
   | { type: "set_wallet"; payload: ethers.Wallet }
@@ -117,12 +116,8 @@ function AppStateReducer(
       };
     }
 
-    case "add_recent_receiver": {
-      return {
-        ...state,
-        recentReceivers: state.recentReceivers.concat(action.payload)
-      }
-    }
+    case "set_recent_receivers": {
+      return { ...state, recentReceivers: action.payload }}
 
     case "clear_recent_receivers": {
       return {

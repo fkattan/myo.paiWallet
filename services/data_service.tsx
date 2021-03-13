@@ -2,8 +2,8 @@ import * as firebase from "firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ethers } from "ethers";
-import { Receiver } from "../app_context";
-import { Contacts } from "expo";
+import  * as Contacts from "expo-contacts";
+import { Recipient } from "../screens/payflow/payflow_context";
 
 /**
  * retrieves the personal data for the current user
@@ -35,6 +35,23 @@ export const findDataForNumbers = async (phoneNumbers: Array<string>) => {
   const snapshots = await Promise.all(promises);
   return snapshots.map((s) => s.val()).filter((s) => !!s);
 };
+
+
+export const findByAddress = async (address:string) => {
+  if(!ethers.utils.isAddress(address)) return null; 
+  
+  const phonesDb = firebase.database().ref('phone-numbers');
+
+  const promise = phonesDb
+    .orderByChild('walletAddress')
+    .startAt(address)
+    .limitToFirst(1)
+    .once('value');
+
+  return promise
+  .catch((reason:any) => console.log(reason));
+
+}
 
 /**
  * stores the profile image in local storage..
@@ -111,15 +128,15 @@ export const removePersonalData = (phone: string | undefined): void => {
 };
 
 
-export const storeRecentContact= (receiver:Contacts.Contact) => {
+export const storeRecentContact = (receiver:Recipient) => {
   AsyncStorage.getItem("recent_contacts")
   .then((value:string|null) => {
 
     // if we do not have any contact stored, create new array.
-    const contacts:Array<Contacts.Contact> = value ? JSON.parse(value) : [];
+    const contacts:Array<Recipient> = value ? JSON.parse(value) : [];
 
     // Remove from Array of Recent Contact if already there
-    const index = contacts.findIndex((v:Contacts.Contact) => v.ID === receiver.ID)
+    const index = contacts.findIndex((v:Recipient) => v.id === receiver.id)
     if(index !== -1) contacts.splice(index, 1);
 
     // Add to begining of Array
@@ -128,12 +145,23 @@ export const storeRecentContact= (receiver:Contacts.Contact) => {
     // Limit to last 5 contacts
     if(contacts.length > 5) contacts.pop();
 
-    AsyncStorage.setItem("recent_contact", JSON.stringify(contacts))
-    .catch(error => console.warn("Can't store recent contacts", JSON.stringify(error)))
+    return AsyncStorage.setItem("recent_contacts", JSON.stringify(contacts))
+    .catch(error => console.warn("Can't store recent contacts", JSON.stringify(error)));
   })
 };
 
-export const retrieveRecentContacts:()=>Promise<Array<Contacts.Contact>> = async () => {
+export const retrieveRecentContacts:()=>Promise<Array<Contacts.Contact>|undefined> = async () => {
   return AsyncStorage.getItem('recent_contacts')
-  .then(value => value ? JSON.parse(value) : [])
+  .then((value:string|null):Promise<Contacts.Contact[]|undefined> => {
+    if(!value) return Promise.resolve(undefined);
+
+    const recipients = JSON.parse(value);
+
+    return Promise.all(
+      recipients.map((recipient:Recipient):Promise<Contacts.Contact|void> => {
+        return recipient.id ? Contacts.getContactByIdAsync(recipient.id) : Promise.resolve();
+      })
+    )
+  })
+  .then((recipients:Contacts.Contact[]|undefined) => recipients ? recipients.filter((item:any) => item) : undefined);
 }

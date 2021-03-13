@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "myo.paiWallet",
+    "owner": "pai-social",
     "slug": "myo_paiWallet",
     "version": "1.0.0",
     "orientation": "portrait",

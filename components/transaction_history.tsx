@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, RefreshControlComponent, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import {Feather} from '@expo/vector-icons';
 import * as Colors from '../colors';
 
@@ -12,7 +12,7 @@ import TransferEventListItem from './transfer_event_list_item';
 
 import i18n from 'i18n-js';
 import {titleize} from '../utils/text_helpers';
-import { useAppContext } from '../app_context';
+import { useAppState } from '../app_context';
 
 type  TransactionHistoryProps = {
     onRefresh?: Function
@@ -27,19 +27,21 @@ const TransactionHistory = ({onRefresh}:TransactionHistoryProps) => {
     const [transactions, setTransactions] = useState<ethers.Event[]>();
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
-
-    const [state, dispatch] = useAppContext();
+    const {wallet} = useAppState();
 
     useEffect(() => {
 
         const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
         const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider)
 
-        const transferFromMe = pai.filters.Transfer(state.wallet?.address);
-        const transferToMe = pai.filters.Transfer(null, state.wallet?.address);
+        const transferFromMe = pai.filters.Transfer(wallet?.address);
+        const transferToMe = pai.filters.Transfer(null, wallet?.address);
 
         const onBalanceChange:()=>void = () => {
-            getTransactions(state.wallet?.address).then(tx => {
+            console.log("Transaction History Detected a balance change, fetching transactions")
+            if(!wallet || !ethers.utils.isAddress(wallet.address)) return
+
+            getTransactions(wallet.address).then(tx => {
                 setTransactions(tx);
             });
         };
@@ -57,16 +59,18 @@ const TransactionHistory = ({onRefresh}:TransactionHistoryProps) => {
 
     useEffect(() => {
 
-        getTransactions(state.wallet?.address)
+        getTransactions(wallet?.address)
         .then((data:Array<ethers.Event>) => {
             setTransactions(data);
         })
         .catch((error:any) => { throw error });
         
-    }, [state.wallet])
+    }, [wallet])
 
 
     const getTransactions = async (address:string|undefined):Promise<ethers.Event[]> => {
+
+        console.log("getTransactions", address);
 
         if(!address || !ethers.utils.isAddress(address)) return []; 
 
@@ -92,13 +96,18 @@ const TransactionHistory = ({onRefresh}:TransactionHistoryProps) => {
         return data.sort((a:ethers.Event, b:ethers.Event) => b.blockNumber - a.blockNumber);
     }
 
+    const doRefresh = () => {
+        getTransactions(wallet?.address)
+        .then((data:ethers.Event[]) => setTransactions(data));
+    }
+
     return (
         <FlatList
             data={transactions}
             refreshControl={
                 <RefreshControl
                     refreshing={refreshing}
-                    onRefresh={() => getTransactions(state.wallet?.address)}
+                    onRefresh={doRefresh.bind(this)}
                     title=""
                     tintColor="#FFF"
                     titleColor="#FFF"/>
@@ -126,14 +135,14 @@ const styles = StyleSheet.create({
       alignItems: 'flex-start',
       justifyContent: 'center',
       padding: 12,
-      backgroundColor: Colors.PRIMARY_BLUE,
-      borderRadius: 6,
-      marginBottom: 12
+      backgroundColor: Colors.MIDNIGHT_BLUE,
+      borderRadius: 12,
+      marginBottom: 5
 
   },
 
   itemText: {
-      color: Colors.WHITE
+      color: Colors.LIGHT_GRAY
   },
 
   noActivityText: {

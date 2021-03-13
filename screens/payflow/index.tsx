@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { capitalize, titleize } from '../../utils/text_helpers';
 import i18n from 'i18n-js';
@@ -15,6 +15,7 @@ import { PayflowProvider } from './payflow_context';
 import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack';
 import * as Colors  from '../../colors';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { useAppState } from '../../app_context';
 
 const Stack = createStackNavigator();
 
@@ -23,6 +24,12 @@ type PayflowIndexProps = {
 }
 
 const Index = ({navigation: rootNavigation}:PayflowIndexProps) => {
+
+    const appState = useAppState();
+
+    useEffect(() => {
+
+    }, [appState.recentReceivers])
 
     const DefaultHeaderOptions = (bg:string, fg:string):StackNavigationOptions => ({
         title: 'Peso Argentino Intangible',

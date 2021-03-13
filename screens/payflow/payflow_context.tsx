@@ -9,6 +9,7 @@ export enum TransactionStatus {
   "IN_PROGRESS",
 }
 export interface Recipient {
+  id?:string;
   name: string;
   address: string;
 }

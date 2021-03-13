@@ -40,6 +40,7 @@ type EnterRecipientProps = {
 const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
   const [recipientInput, setRecipientInput] = useState<string>("");
   const [recipientAddress, setRecipientAddress] = useState<string|undefined>(undefined);
+  const [recipientId, setRecipientId] = useState<string|undefined>(undefined);
 
   const [disabled, setDisabled] = useState<boolean>(true);
   const [hasFocus, setFocus] = useState<boolean>(false);
@@ -60,6 +61,7 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
 
   // If input text is not an address, update search query to find posible name matches
   useEffect(() => {
+    if(recipientInput === undefined) return; 
     setSearchQuery(ethers.utils.isAddress(recipientInput) ? undefined : recipientInput);
   }, [recipientInput]);
 
@@ -68,7 +70,7 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
 
     payflowDispatch({
       type: "set_recipient",
-      payload: { name: recipientInput, address: recipientAddress },
+      payload: { id: recipientId, name: recipientInput, address: recipientAddress },
     });
     navigation.navigate("enter_message");
   };
@@ -79,6 +81,7 @@ const EnterRecipient = ({ route, navigation }: EnterRecipientProps) => {
 
   const onContact = (contact:Contacts.Contact, address:string) => {
         setRecipientAddress(address);
+        setRecipientId(contact.id);
         setRecipientInput(contact.name);
         setDisabled(false);
   }

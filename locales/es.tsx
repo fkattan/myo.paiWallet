@@ -28,6 +28,7 @@ export default {
   receive: "recibir",
   latest_transactions: "ultimos movimientos",
   no_description_available: "sin descripcion",
+  annonymous: 'anonimo',
 
   enter_amount: "ingrese monto",
   available: "disponible",

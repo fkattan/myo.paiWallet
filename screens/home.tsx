@@ -100,11 +100,8 @@ const Home = ({navigation}:HomeProps) => {
 
         setLoading(true);
         Promise.all([
-            pai.decimals()
-            .then((result:ethers.BigNumber) => dispatch({type: 'set_decimals', payload:result})),
-
-            pai.balanceOf(address)
-            .then((balance:ethers.BigNumber) => dispatch({type: "set_balance", payload: ethers.utils.formatUnits(balance, decimals)}))
+            fetchDecimals(pai),
+            fetchBalance(pai),
         ])
         .catch((error:any) => { throw error })
         .finally(() => setLoading(false));
@@ -116,8 +113,10 @@ const Home = ({navigation}:HomeProps) => {
 
     }, [address])
 
+    const fetchDecimals = (contract:ethers.Contract) => contract.decimals().then((decimals:ethers.BigNumber) => dispatch({type: 'set_decimals', payload: decimals}));
+
     const fetchBalance = (pai:ethers.Contract) => {
-        pai.balanceOf(address)
+        return pai.balanceOf(address)
         .then((balance:ethers.BigNumber) => dispatch({type: "set_balance", payload: ethers.utils.formatUnits(balance, decimals)}))
     }
 
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
   },
 
   transactionHistoryContainer: {
-    marginBottom: 40
+    marginBottom: 40,
   },
 
   label: {

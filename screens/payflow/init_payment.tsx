@@ -96,7 +96,6 @@ const Pay = ({route, navigation}:PayProps) => {
         // TODO: Send to relayer.
         const tx = await pai.permit(signerAddress, recipient, weiAmount, deadline, rsvSignature.v, rsvSignature.r, rsvSignature.s, {nonce, gasLimit: 90000, gasPrice: 2000000000})
         .then(async (response:ethers.providers.TransactionResponse) => {
-            console.log(response)
             navigation.navigate("pending_payment", {txHash: response.hash})
         })
         .catch((error:any) => console.log(error))

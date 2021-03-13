@@ -25,6 +25,7 @@ import { formatCurrency, toWei } from "../../utils/currency_helpers";
 import  * as Colors from '../../colors';
 
 import i18n from 'i18n-js';
+import { storeRecentContact } from "../../services/data_service";
 
 type EnterRecipientProps = {
     route:any,
@@ -39,6 +40,8 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
     const {wallet} = useAppState();
     const [payflowState, dispatch] = usePayflowContext();
     const {recipient, amount, memo, txStatus, receipt} = payflowState;
+
+    const appDispatch = useAppDispatch();
 
     const [progress, setProgress] = useState<number>(0);
 
@@ -95,10 +98,35 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                 break; 
             
             case TransactionStatus.IN_PROGRESS:
+                // Verify Preconditions
+                if(!wallet || !amount || !recipient) {
+                    console.error("Invalid wallet, amount, or recipient");
+                    transitionToError();
+                    return;
+                }
+
+                // Execute async payment process
+                processPaymentRequest(wallet, amount, recipient)
+
+                // Update UI
                 fadeIn(inProgressOpacity).start();
                 break;
             
             case TransactionStatus.SUCCESS: 
+                // Remember Recipient
+                // recipient && appDispatch({type: 'add_recent_receiver', payload: recipient})
+
+                if(recipient) {
+                    storeRecentContact(recipient);
+                }
+
+                // receipt && memo && AsyncStorage.setItem(receipt.transactionHash + ".memo", memo);
+                // receipt && recipient?.id && AsyncStorage.setItem(receipt.transactionHash + ".contact_id", recipient.id)
+
+                // Save the Memo field locally 
+                receipt && AsyncStorage.setItem(receipt.transactionHash, JSON.stringify({recipient, memo}))
+
+                // Update UI 
                 fadeIn(successOpacity).start();
                 break;
             
@@ -108,26 +136,24 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
         }
     }, [txStatus])
 
-    useEffect(() => {
-        switch(txStatus) {
-            // Execute Payment when TX Status is set to IN_PROGRESS
-            // Separate execution from button press, to get better UI performance
-            case TransactionStatus.IN_PROGRESS:
-                if(!wallet || !amount || !recipient) {
-                    console.error("Invalid wallet, amount, or recipient");
-                    return;
-                }
-                processPaymentRequest(wallet, amount, recipient)
-                break; 
-            
-            // Store Memo field locally: associated with this tx's hash
-            case TransactionStatus.SUCCESS: 
-                if(receipt === undefined || memo === undefined) break;
-                AsyncStorage.setItem(receipt.transactionHash, memo);
+    // useEffect(() => {
+    //     switch(txStatus) {
+    //         // Execute Payment when TX Status is set to IN_PROGRESS
+    //         // Separate execution from button press, to get better UI performance
+    //         case TransactionStatus.IN_PROGRESS:
+    //             if(!wallet || !amount || !recipient) {
+    //                 console.error("Invalid wallet, amount, or recipient");
+    //                 return;
+    //             }
+    //             processPaymentRequest(wallet, amount, recipient)
+    //             break; 
+    //         // Store Memo field locally: associated with this tx's hash
+    //         // case TransactionStatus.SUCCESS: 
+    //         //     if(receipt === undefined || memo === undefined) break;
+    //         //     AsyncStorage.setItem(receipt.transactionHash, memo);
+    //     }
 
-        }
-
-    }, [txStatus]);
+    // }, [txStatus]);
 
 
     const onConfirmPayment = () => {
@@ -174,7 +200,7 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
 
             // Timeout fetch request
             const controller = new AbortController();
-            const fetchTimeout = setTimeout(() => controller.abort(), 35000); // 15s
+            const fetchTimeout = setTimeout(() => controller.abort(), 15000); // 15s
 
             const response = await fetch(RELAYER_URL, {
                 signal: controller.signal,
@@ -209,8 +235,9 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                     transitionToSuccess();
                 });
             } else {
+                console.log("Response Not OK: ", response);
                 dispatch({type: 'error', error: `Reverted [status:${response.status}]`});
-                // transitionToError();
+                transitionToError();
             }
 
         } catch(e) {

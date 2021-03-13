@@ -29,6 +29,7 @@ export default {
   receive: "receive",
   latest_transactions: "latest transactions",
   no_description_available: "no description available",
+  annonymous: 'annonymous',
 
   enter_amount: "enter amount",
   available: "available",
