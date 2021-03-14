@@ -64,12 +64,12 @@ const AccountInfo = ({ navigation }: AccountInfoProps) => {
     loadPersonalData();
     (async () => {
       if (Platform.OS !== "web") {
-        let response = await ImagePicker.requestCameraRollPermissionsAsync();
+        let response = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (response.status !== "granted") {
           alert(capitalize(i18n.t("need_camera_roll_access")));
         }
 
-        response = await ImagePicker.requestCameraPermissionsAsync();
+        response = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (response.status !== "granted") {
           alert(capitalize(i18n.t("need_camera_access")));
         }

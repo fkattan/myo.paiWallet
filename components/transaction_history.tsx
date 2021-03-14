@@ -31,46 +31,34 @@ const TransactionHistory = ({onRefresh}:TransactionHistoryProps) => {
 
     useEffect(() => {
 
+        if(!wallet) return;
+
+        const updateTransactionData = () => {
+            if(!wallet || !ethers.utils.isAddress(wallet.address)) return
+            getTransactions(wallet.address)
+            .then((data:Array<ethers.Event>) => setTransactions(data))
+            .catch((error:any) => { throw error });
+        }
+
         const provider = new ethers.providers.JsonRpcProvider(L2_PROVIDER_URL);
         const pai = new ethers.Contract(L2_PAI_ADDRESS, PAI.abi, provider)
 
-        const transferFromMe = pai.filters.Transfer(wallet?.address);
-        const transferToMe = pai.filters.Transfer(null, wallet?.address);
+        const transferFromMe = pai.filters.Transfer(wallet.address);
+        const transferToMe = pai.filters.Transfer(null, wallet.address);
 
-        const onBalanceChange:()=>void = () => {
-            console.log("Transaction History Detected a balance change, fetching transactions")
-            if(!wallet || !ethers.utils.isAddress(wallet.address)) return
+        pai.on(transferFromMe, updateTransactionData); 
+        pai.on(transferToMe, updateTransactionData);
 
-            getTransactions(wallet.address).then(tx => {
-                setTransactions(tx);
-            });
-        };
-
-        pai.on(transferFromMe, onBalanceChange); 
-        pai.on(transferToMe, onBalanceChange);
+        updateTransactionData();
 
         return () => {
-            pai.off(transferFromMe, onBalanceChange);
-            pai.off(transferToMe, onBalanceChange);
+            pai.off(transferFromMe, updateTransactionData);
+            pai.off(transferToMe, updateTransactionData);
         }
-
-    }, []);
-
-
-    useEffect(() => {
-
-        getTransactions(wallet?.address)
-        .then((data:Array<ethers.Event>) => {
-            setTransactions(data);
-        })
-        .catch((error:any) => { throw error });
         
     }, [wallet])
 
-
     const getTransactions = async (address:string|undefined):Promise<ethers.Event[]> => {
-
-        console.log("getTransactions", address);
 
         if(!address || !ethers.utils.isAddress(address)) return []; 
 

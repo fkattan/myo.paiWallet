@@ -44,11 +44,11 @@ const SignIn = () => {
 
     useEffect(() => {
 
+        // Sign in to firebase once we have biometric sign in
+        // firebase db is restricted to annonymous users 
         if(state.auth === AuthState.success) {
             firebase.auth().signInAnonymously()
-            .then(() => {
-                console.log("Firebase Auth Success")
-            })
+            .then(() => console.log("Firebase Auth Success"))
             .catch((error) => {
                 console.error(error.code, error.message);
             });

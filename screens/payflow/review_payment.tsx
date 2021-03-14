@@ -235,7 +235,6 @@ const ReviewMessage = ({navigation}:EnterRecipientProps) => {
                     transitionToSuccess();
                 });
             } else {
-                console.log("Response Not OK: ", response);
                 dispatch({type: 'error', error: `Reverted [status:${response.status}]`});
                 transitionToError();
             }

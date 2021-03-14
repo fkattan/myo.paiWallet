@@ -34,7 +34,7 @@ const Home = ({navigation}:HomeProps) => {
     const [address, setAddress] = useState<string>();
 
     const [ state, dispatch ] = useAppContext();
-    const { wallet, balance, decimals } = state;
+    const { balance, decimals } = state;
 
 
 
